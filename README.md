@@ -131,6 +131,5 @@ Este projeto é um sistema simples de cadastro e gerenciamento de informações 
 
 5. **Melhorias de UI/UX:**
    - Implementar alertas e mensagens de sucesso/erro mais claros.
-   - Melhorar a responsividade para dispositivos móveis.
 
 ---

@@ -3,16 +3,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const addSocioBtn = document.getElementById("add-socio-btn");
     const avancarBtn = document.getElementById("avancar-btn");
 
-    // Recupera os sócios armazenados no localStorage
-    let sociosData = JSON.parse(localStorage.getItem("sociosData")) || [];
-    console.log("Sócios carregados do localStorage:", sociosData);
+    const cnpj = JSON.parse(localStorage.getItem("empresaCNPJ"));
+    console.log("CNPJ recuperado do localStorage:", cnpj);
 
-    let socioIndex = sociosData.length; // Define o índice inicial baseado na quantidade de sócios
+    let sociosData = [];
+    let socioIndex = 0;
 
-    // === Função para criar campos de sócio ===
     function criarCamposSocio(socio = {}, index) {
-        console.log("Criando campos para sócio:", socio, "Índice:", index);
-
         const socioDiv = document.createElement("div");
         socioDiv.classList.add("card", "p-4", "mb-4");
         socioDiv.id = `socio-${index}`;
@@ -20,105 +17,129 @@ document.addEventListener("DOMContentLoaded", () => {
             <h5>Sócio ${index + 1}</h5>
             <div class="mb-3">
                 <label for="nome-socio-${index}" class="form-label">Nome:</label>
-                <input type="text" id="nome-socio-${index}" class="form-control required-socio" value="${socio.nome || ''}">
+                <input type="text" id="nome-socio-${index}" class="form-control required-socio" value="${socio.nome || ''}" readonly>
             </div>
             <div class="mb-3">
                 <label for="cep-socio-${index}" class="form-label">CEP:</label>
-                <input type="text" id="cep-socio-${index}" class="form-control required-socio" value="${socio.cep || ''}">
+                <input type="text" id="cep-socio-${index}" class="form-control" value="${socio.cep || ''}" placeholder="Ex: 12345678">
             </div>
             <div class="mb-3">
                 <label for="endereco-socio-${index}" class="form-label">Endereço:</label>
-                <input type="text" id="endereco-socio-${index}" class="form-control required-socio" value="${socio.endereco || ''}">
+                <input type="text" id="endereco-socio-${index}" class="form-control" value="${socio.endereco || ''}">
             </div>
             <div class="mb-3">
                 <label for="numero-socio-${index}" class="form-label">Número:</label>
-                <input type="text" id="numero-socio-${index}" class="form-control required-socio" value="${socio.numero || ''}">
+                <input type="text" id="numero-socio-${index}" class="form-control" value="${socio.numero || ''}">
             </div>
             <div class="mb-3">
                 <label for="bairro-socio-${index}" class="form-label">Bairro:</label>
-                <input type="text" id="bairro-socio-${index}" class="form-control required-socio" value="${socio.bairro || ''}">
+                <input type="text" id="bairro-socio-${index}" class="form-control" value="${socio.bairro || ''}">
             </div>
             <div class="mb-3">
                 <label for="cidade-socio-${index}" class="form-label">Cidade:</label>
-                <input type="text" id="cidade-socio-${index}" class="form-control required-socio" value="${socio.cidade || ''}">
+                <input type="text" id="cidade-socio-${index}" class="form-control" value="${socio.cidade || ''}">
             </div>
             <div class="mb-3">
                 <label for="uf-socio-${index}" class="form-label">UF:</label>
-                <input type="text" id="uf-socio-${index}" class="form-control required-socio" value="${socio.uf || ''}">
+                <input type="text" id="uf-socio-${index}" class="form-control" value="${socio.uf || ''}">
             </div>
-            <div class="mb-3">
-                <label for="telefone-socio-${index}" class="form-label">Telefone:</label>
-                <input type="text" id="telefone-socio-${index}" class="form-control required-socio" value="${socio.telefone || ''}">
-            </div>
-            <div class="mb-3">
-                <label for="email-socio-${index}" class="form-label">E-mail:</label>
-                <input type="email" id="email-socio-${index}" class="form-control required-socio" value="${socio.email || ''}">
-            </div>
-            <button type="button" class="btn btn-danger" onclick="removerSocio(${index})">Remover Sócio</button>  
         `;
         socioContainer.appendChild(socioDiv);
-
-        // Adiciona evento para validação ao alterar qualquer campo
-        socioDiv.querySelectorAll(".required-socio").forEach((input) => {
-            input.addEventListener("input", validarFormulario);
-        });
-
-        validarFormulario(); // Revalida ao criar campos
+        adicionarEventoCEP(index);
     }
 
-    // === Função para remover sócio ===
-    window.removerSocio = (index) => {
-        console.log("Removendo sócio:", index);
-
-        const socioDiv = document.getElementById(`socio-${index}`);
-        sociosData = sociosData.filter((_, i) => i !== index); // Remove o sócio pelo índice
-        socioDiv.remove();
-        atualizarStorage(); // Atualiza o localStorage
-        validarFormulario(); // Revalida após remoção
-    };
-
-    // === Função para atualizar o localStorage ===
-    function atualizarStorage() {
-        console.log("Atualizando localStorage:", sociosData);
-
-        localStorage.setItem("sociosData", JSON.stringify(sociosData));
+    async function buscarSociosPorCNPJ(cnpj) {
+        if (!cnpj) {
+            console.warn("CNPJ não encontrado no localStorage.");
+            return;
+        }
+    
+        try {
+            console.log(`Buscando sócios para o CNPJ: ${cnpj}`);
+            const response = await fetch(`http://localhost:3000/cnpj/${cnpj}`);
+            if (!response.ok) throw new Error("Erro ao buscar sócios");
+            const data = await response.json();
+            console.log("Dados recebidos da API:", data);
+    
+            if (data.qsa && Array.isArray(data.qsa)) {
+                data.qsa.forEach((socio, index) => {
+                    const novoSocio = {
+                        nome: socio.nome || `Sócio ${index + 1}`,
+                        cep: "",
+                        endereco: "",
+                        numero: "",
+                        bairro: "",
+                        cidade: "",
+                        uf: "",
+                    };
+                    sociosData.push(novoSocio);
+                    criarCamposSocio(novoSocio, socioIndex++);
+                });
+            } else {
+                console.warn("Nenhum sócio encontrado para o CNPJ fornecido.");
+            }
+        } catch (error) {
+            console.error("Erro ao buscar sócios:", error);
+        }
     }
 
-    // === Função para validar se todos os campos obrigatórios estão preenchidos ===
-    function validarFormulario() {
-        const camposObrigatorios = document.querySelectorAll(".required-socio");
-        const todosPreenchidos = Array.from(camposObrigatorios).every((input) => input.value.trim() !== "");
-
-        avancarBtn.disabled = !todosPreenchidos;
+    function adicionarEventoCEP(index) {
+        const cepInput = document.getElementById(`cep-socio-${index}`);
+        if (cepInput) {
+            cepInput.addEventListener("blur", () => {
+                const cep = cepInput.value.replace(/\D/g, '');
+                buscarEndereco(cep, index);
+            });
+        }
     }
 
-    // === Evento para adicionar novo sócio ===
-    addSocioBtn.addEventListener("click", () => {
-        console.log("Adicionando novo sócio");
+    async function buscarEndereco(cep, index) {
+        if (!cep || cep.length !== 8) {
+            alert("Por favor, insira um CEP válido com 8 dígitos.");
+            return;
+        }
+        try {
+            const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+            if (!response.ok) throw new Error("Erro ao buscar endereço");
+            const data = await response.json();
 
-        const novoSocio = {};
-        sociosData.push(novoSocio);
-        criarCamposSocio(novoSocio, socioIndex);
-        socioIndex++;
-        atualizarStorage(); // Atualiza o localStorage após adicionar sócio
+            if (data.erro) {
+                alert("CEP não encontrado. Verifique e tente novamente.");
+                return;
+            }
+
+            document.getElementById(`endereco-socio-${index}`).value = data.logradouro || '';
+            document.getElementById(`bairro-socio-${index}`).value = data.bairro || '';
+            document.getElementById(`cidade-socio-${index}`).value = data.localidade || '';
+            document.getElementById(`uf-socio-${index}`).value = data.uf || '';
+        } catch (error) {
+            console.error("Erro ao buscar endereço:", error);
+            alert("Houve um erro ao buscar o endereço. Tente novamente mais tarde.");
+        }
+    }
+
+    async function carregarSocios() {
+        if (cnpj) {
+            await buscarSociosPorCNPJ(cnpj);
+        } else {
+            console.warn("CNPJ não disponível no localStorage para carregar os sócios.");
+        }
+    }
+    function limparDadosLocalStorage() {
+        localStorage.removeItem("pessoaJuridica");
+        localStorage.removeItem("sociosData");
+    }
+    
+    concluirCadastroBtn.addEventListener("click", async () => {
+        // Após salvar os dados
+        await salvarDadosNoServidor(); // Função responsável por salvar
+        limparDadosLocalStorage(); // Limpa os dados
     });
+    
+    carregarSocios();
 
-    // === Evento de avançar para a próxima página ===
     avancarBtn.addEventListener("click", () => {
-        atualizarStorage(); // Certifica-se de salvar os dados antes de avançar
-        window.location.href = "bancos.html"; // Redireciona para a página de bancos
+        localStorage.setItem("sociosData", JSON.stringify(sociosData));
+        window.location.href = "bancos.html";
     });
-
-    // === Carregar sócios armazenados ao iniciar ===
-    if (sociosData.length > 0) {
-        console.log("Carregando sócios armazenados");
-
-        sociosData.forEach((socio, index) => {
-            criarCamposSocio(socio, index);
-        });
-    } else {
-        console.log("Nenhum sócio armazenado no localStorage");
-    }
-
-    validarFormulario(); // Verifica o formulário ao carregar a página
 });

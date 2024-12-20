@@ -18,6 +18,13 @@ body {
     transition: box-shadow 0.3s ease;
 }
 
+tr{
+    color: white;
+}
+
+th{
+    color: white;
+}
 .form-control:focus {
     border-color: #ffd700;
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.7);

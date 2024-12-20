@@ -61,62 +61,61 @@ document.addEventListener("DOMContentLoaded", () => {
             cnpjInput.classList.add("is-invalid");
         }
     }
-   // === Formatar Capital Social ===
-   function formatarParaMoeda(valor) {
-    const numero = parseFloat(valor.replace(/[^\d.-]/g, '').replace(',', '.')) || 0;
-    return numero.toLocaleString('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-    });
-}
-
-function removerFormatacao(valor) {
-    return parseFloat(valor.replace(/[^\d.-]/g, '').replace(',', '.')) || 0;
-}
-
-
-// Atualizar campos de capital social
-capitalSocialInput.addEventListener("input", () => {
-    const rawValue = capitalSocialInput.value; // Valor digitado pelo usuário
-    const formattedValue = formatarParaMoeda(rawValue); // Formata para exibição
-    const numericValue = removerFormatacao(rawValue); // Remove formatação para banco de dados
-
-    capitalSocialInput.value = formattedValue; // Atualiza valor formatado
-    capitalSocialNumInput.value = numericValue; // Atualiza valor numérico oculto
-});
-function preencherDadosEmpresa(data) {
-    const capitalSocialInput = document.getElementById("capital_social");
-    const capitalSocialNumInput = document.getElementById("capital_social_num");
-
-    document.getElementById("razao_social").value = data.razao_social || '';
-    document.getElementById("nome_fantasia").value = data.nome_fantasia || '';
-    document.getElementById("logradouro").value = data.logradouro || '';
-    document.getElementById("ramo_atividade").value = data.cnae_fiscal_descricao || '';
-    document.getElementById("data_fundacao").value = data.data_inicio_atividade || '';
-    
-    if (capitalSocialInput) {
-        capitalSocialInput.value = formatarParaMoeda(String(data.capital_social || '0'));
-    }
-    if (capitalSocialNumInput) {
-        capitalSocialNumInput.value = removerFormatacao(String(data.capital_social || '0'));
-    }
-    
-    document.getElementById("numero_complemento").value = data.numero || '';
-    document.getElementById("bairro").value = data.bairro || '';
-    document.getElementById("cidade").value = data.municipio || '';
-    document.getElementById("uf").value = data.uf || '';
-    document.getElementById("telefones").value = data.ddd_telefone_1 || '';
-    document.getElementById("email").value = data.email || '';
-}
-
-
-    function formatarParaMoeda(valor, valorF) {
-        var valorF=valor
-        const numero = parseFloat(valorF.toString().replace(/[^\d.-]/g, '').replace(',', '.')) || 0;
+    function formatarParaMoeda(valor) {
+        const numero = parseFloat(valor.replace(/[^\d.-]/g, '').replace(',', '.')) || 0;
         return numero.toLocaleString('pt-BR', {
             style: 'currency',
             currency: 'BRL',
         });
+    }
+    
+    function removerFormatacao(valor) {
+        return parseFloat(valor.replace(/[^\d.-]/g, '').replace(',', '.')) || 0;
+    }
+    
+    capitalSocialInput.addEventListener("input", () => {
+        if (isTyping) return; // Evita reentrância
+        isTyping = true;
+    
+        const rawValue = capitalSocialInput.value.replace(/[^\d]/g, ''); // Apenas números
+        const numericValue = removerFormatacao(rawValue) / 100; // Divide para incluir casas decimais
+        const formattedValue = formatarParaMoeda(numericValue.toFixed(2)); // Formata valor final
+    
+        capitalSocialInput.value = formattedValue; // Exibe o valor formatado
+        capitalSocialNumInput.value = numericValue.toFixed(2); // Valor para envio ao banco
+    
+        isTyping = false;
+    });
+    
+    capitalSocialInput.addEventListener("blur", () => {
+        // Atualiza ao sair do campo para garantir formatação final
+        const numericValue = removerFormatacao(capitalSocialInput.value);
+        capitalSocialInput.value = formatarParaMoeda(numericValue.toFixed(2));
+        capitalSocialNumInput.value = numericValue.toFixed(2);
+    });
+    
+    function preencherDadosEmpresa(data) {
+        const capitalSocialInput = document.getElementById("capital_social");
+        const capitalSocialNumInput = document.getElementById("capital_social_num");
+    
+        document.getElementById("razao_social").value = data.razao_social || '';
+        document.getElementById("nome_fantasia").value = data.nome_fantasia || '';
+        document.getElementById("logradouro").value = data.logradouro || '';
+        document.getElementById("ramo_atividade").value = data.cnae_fiscal_descricao || '';
+        document.getElementById("data_fundacao").value = data.data_inicio_atividade || '';
+    
+        if (capitalSocialInput) {
+            const numericValue = parseFloat(data.capital_social || '0');
+            capitalSocialInput.value = formatarParaMoeda(numericValue.toFixed(2));
+            capitalSocialNumInput.value = numericValue.toFixed(2);
+        }
+    
+        document.getElementById("numero_complemento").value = data.numero || '';
+        document.getElementById("bairro").value = data.bairro || '';
+        document.getElementById("cidade").value = data.municipio || '';
+        document.getElementById("uf").value = data.uf || '';
+        document.getElementById("telefones").value = data.ddd_telefone_1 || '';
+        document.getElementById("email").value = data.email || '';
     }
 
     // === Configurar Drag-and-Drop ===
@@ -231,7 +230,7 @@ function preencherDadosEmpresa(data) {
     
         try {
             // Armazena os dados no localStorage
-            localStorage.setItem("pessoaJuridica", JSON.stringify(pessoaJuridica));
+            localStorage.setItem("empresaCNPJ", JSON.stringify(pessoaJuridica.cnpj));
     
             // Redireciona para a página de sócios
             window.location.href = "socios.html";

@@ -168,7 +168,17 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Erro ao concluir cadastro. Tente novamente.");
         }
     });
-
+    function limparDadosLocalStorage() {
+        localStorage.removeItem("pessoaJuridica");
+        localStorage.removeItem("sociosData");
+    }
+    
+    concluirCadastroBtn.addEventListener("click", async () => {
+        // Após salvar os dados
+        await salvarDadosNoServidor(); // Função responsável por salvar
+        limparDadosLocalStorage(); // Limpa os dados
+    });
+    
     // Revalida ao carregar a página
     validarFormulario();
 });

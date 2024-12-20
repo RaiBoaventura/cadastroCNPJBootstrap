@@ -25,9 +25,31 @@ pool.connect((err) => {
     }
 });
 
-// Endpoint para salvar dados
+// Endpoint para buscar dados do CNPJ da ReceitaWS
+app.get('/cnpj/:cnpj', async (req, res) => {
+    const { cnpj } = req.params;
+
+    try {
+        console.log(`Buscando dados para o CNPJ: ${cnpj}`);
+        const response = await fetch(`https://www.receitaws.com.br/v1/cnpj/${cnpj}`);
+        if (!response.ok) throw new Error('Erro ao buscar dados na ReceitaWS');
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Erro ao buscar dados do CNPJ:', error);
+        res.status(500).json({ message: 'Erro ao buscar dados do CNPJ.', error: error.message });
+    }
+});
+
+// Endpoint genérico para salvar dados
 app.post('/salvar', async (req, res) => {
     const { tabela, dados } = req.body;
+
+    const tabelasPermitidas = ['empresa', 'socios', 'referenciasbancarias', 'referenciascomerciais'];
+    if (!tabelasPermitidas.includes(tabela.toLowerCase())) {
+        return res.status(400).send('Tabela inválida.');
+    }
+
     const campos = Object.keys(dados).join(", ");
     const valores = Object.values(dados);
     const placeholders = valores.map((_, index) => `$${index + 1}`).join(", ");
@@ -39,115 +61,100 @@ app.post('/salvar', async (req, res) => {
         res.send('Dados salvos com sucesso!');
     } catch (error) {
         console.error('Erro ao salvar dados:', error);
-        res.status(500).send('Erro ao salvar dados.');
+        res.status(500).json({ message: 'Erro ao salvar dados.', error: error.message });
     }
 });
 
-// **NOVO: Endpoint para consultar dados**
-app.get('/consultar/:tabela', async (req, res) => {
-    const { tabela } = req.params;
+// CRUD específico para empresas
 
-    const query = `SELECT * FROM ${tabela}`;
-
+// Listar todas as empresas
+app.get('/empresa', async (req, res) => {
     try {
-        const resultado = await pool.query(query);
-        res.json(resultado.rows); // Retorna os dados como JSON
+        const query = `SELECT * FROM empresa ORDER BY id ASC`;
+        const result = await pool.query(query);
+        res.json(result.rows);
     } catch (error) {
-        console.error('Erro ao consultar dados:', error);
-        res.status(500).send('Erro ao consultar dados.');
+        console.error('Erro ao listar empresas:', error);
+        res.status(500).json({ message: 'Erro ao listar empresas.' });
     }
 });
-app.get('/tabelas', async (req, res) => {
-    const query = `
-        SELECT table_name
-        FROM information_schema.tables
-        WHERE table_schema = 'public';
-    `;
 
-    try {
-        const resultado = await pool.query(query);
-        res.json(resultado.rows); // Retorna a lista de tabelas no formato JSON
-    } catch (error) {
-        console.error('Erro ao listar tabelas:', error);
-        res.status(500).send('Erro ao listar tabelas.');
+// Criar uma nova empresa
+app.post('/empresa', async (req, res) => {
+    const { cnpj, razao_social, telefone } = req.body;
+
+    if (!cnpj || !razao_social) {
+        return res.status(400).json({ message: 'CNPJ e Razão Social são obrigatórios.' });
     }
-});
-app.post('/pessoa-juridica', async (req, res) => {
-    const {
-        cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
-        data_fundacao, capital_social, telefones, conta_bancaria, email, site,
-        contador, telefone_contador, logradouro, numero_complemento, bairro, cidade, uf
-    } = req.body;
 
     try {
+        // Verificar se o CNPJ já existe
+        const checkQuery = `SELECT id FROM empresa WHERE cnpj = $1`;
+        const existing = await pool.query(checkQuery, [cnpj]);
+
+        if (existing.rows.length > 0) {
+            return res.status(400).json({ message: 'Empresa com este CNPJ já cadastrada.' });
+        }
+
         const query = `
-            INSERT INTO PessoaJuridica (
-                cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
-                data_fundacao, capital_social, telefones, conta_bancaria, email, site,
-                contador, telefone_contador, logradouro, numero_complemento, bairro, cidade, uf
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+            INSERT INTO empresa (cnpj, razao_social, telefone)
+            VALUES ($1, $2, $3)
             RETURNING id;
         `;
-        const values = [
-            cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
-            data_fundacao, capital_social, telefones, conta_bancaria, email, site,
-            contador, telefone_contador, logradouro, numero_complemento, bairro, cidade, uf
-        ];
+        const values = [cnpj, razao_social, telefone];
         const result = await pool.query(query, values);
-        res.json({ message: "Pessoa Jurídica cadastrada com sucesso!", id: result.rows[0].id });
+        res.status(201).json({ message: 'Empresa criada com sucesso.', id: result.rows[0].id });
     } catch (error) {
-        console.error("Erro ao cadastrar Pessoa Jurídica:", error);
-        res.status(500).send("Erro ao cadastrar Pessoa Jurídica.");
+        console.error('Erro ao criar empresa:', error);
+        res.status(500).json({ message: 'Erro ao criar empresa.', error: error.message });
     }
 });
-app.post('/referencias-comerciais', async (req, res) => {
-    const { pessoa_juridica_id, fornecedor, telefone, ramo, contato } = req.body;
+
+// Atualizar uma empresa pelo ID
+app.put('/empresa/:id', async (req, res) => {
+    const { id } = req.params;
+    const { cnpj, razao_social, telefone } = req.body;
 
     try {
         const query = `
-            INSERT INTO ReferenciasComerciais (pessoa_juridica_id, fornecedor, telefone, ramo, contato)
-            VALUES ($1, $2, $3, $4, $5);
+            UPDATE empresa
+            SET cnpj = $1, razao_social = $2, telefone = $3
+            WHERE id = $4
         `;
-        await pool.query(query, [pessoa_juridica_id, fornecedor, telefone, ramo, contato]);
-        res.json({ message: "Referência Comercial cadastrada com sucesso!" });
+        const values = [cnpj, razao_social, telefone, id];
+        const result = await pool.query(query, values);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'Empresa não encontrada.' });
+        }
+
+        res.json({ message: 'Empresa atualizada com sucesso!' });
     } catch (error) {
-        console.error("Erro ao cadastrar Referência Comercial:", error);
-        res.status(500).send("Erro ao cadastrar Referência Comercial.");
+        console.error('Erro ao atualizar empresa:', error);
+        res.status(500).json({ message: 'Erro ao atualizar empresa.', error: error.message });
     }
 });
-app.post('/referencias-bancarias', async (req, res) => {
-    const {
-        pessoa_juridica_id, banco, agencia, conta_bancaria, data_abertura, telefone, gerente, observacoes
-    } = req.body;
+
+// Deletar uma empresa pelo ID
+app.delete('/empresa/:id', async (req, res) => {
+    const { id } = req.params;
 
     try {
-        const query = `
-            INSERT INTO ReferenciasBancarias (pessoa_juridica_id, banco, agencia, conta_bancaria, data_abertura, telefone, gerente, observacoes)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
-        `;
-        await pool.query(query, [pessoa_juridica_id, banco, agencia, conta_bancaria, data_abertura, telefone, gerente, observacoes]);
-        res.json({ message: "Referência Bancária cadastrada com sucesso!" });
-    } catch (error) {
-        console.error("Erro ao cadastrar Referência Bancária:", error);
-        res.status(500).send("Erro ao cadastrar Referência Bancária.");
-    }
-});
-app.post('/socios', async (req, res) => {
-    const { pessoa_juridica_id, nome, cpf, telefone, email, cargo } = req.body;
+        const query = `DELETE FROM empresa WHERE id = $1`;
+        const result = await pool.query(query, [id]);
 
-    try {
-        const query = `
-            INSERT INTO Socios (pessoa_juridica_id, nome, cpf, telefone, email, cargo)
-            VALUES ($1, $2, $3, $4, $5, $6);
-        `;
-        await pool.query(query, [pessoa_juridica_id, nome, cpf, telefone, email, cargo]);
-        res.json({ message: "Sócio cadastrado com sucesso!" });
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'Empresa não encontrada.' });
+        }
+
+        res.json({ message: 'Empresa deletada com sucesso!' });
     } catch (error) {
-        console.error("Erro ao cadastrar Sócio:", error);
-        res.status(500).send("Erro ao cadastrar Sócio.");
+        console.error('Erro ao deletar empresa:', error);
+        res.status(500).json({ message: 'Erro ao deletar empresa.', error: error.message });
     }
 });
 
+// Salvar tudo (pessoa jurídica, sócios, referências)
 app.post('/salvar-tudo', async (req, res) => {
     const { pessoaJuridica, socios, commercialRefs, bankRefs } = req.body;
 
@@ -157,80 +164,88 @@ app.post('/salvar-tudo', async (req, res) => {
         // Inicia uma transação
         await client.query('BEGIN');
 
-        // Inserir na tabela Pessoa Jurídica
-        const pessoaJuridicaQuery = `
-            INSERT INTO pessoajuridica (
-                cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
-                data_fundacao, capital_social, telefones, conta_bancaria, email, site,
-                contador, telefone_contador, logradouro, numero_complemento, bairro, cidade, uf
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
-            RETURNING id;
-        `;
-        const pessoaJuridicaValues = [
-            pessoaJuridica.cnpj, pessoaJuridica.razao_social, pessoaJuridica.nome_fantasia,
-            pessoaJuridica.inscricao_estadual, pessoaJuridica.ramo_atividade, pessoaJuridica.data_fundacao,
-            pessoaJuridica.capital_social, pessoaJuridica.telefones, pessoaJuridica.conta_bancaria,
-            pessoaJuridica.email, pessoaJuridica.site, pessoaJuridica.contador,
-            pessoaJuridica.telefone_contador, pessoaJuridica.logradouro, pessoaJuridica.numero_complemento,
-            pessoaJuridica.bairro, pessoaJuridica.cidade, pessoaJuridica.uf,
-        ];
-        const pessoaJuridicaResult = await client.query(pessoaJuridicaQuery, pessoaJuridicaValues);
-        const pessoaJuridicaId = pessoaJuridicaResult.rows[0].id;
+        // Verificar se a empresa já existe
+        const checkQuery = `SELECT id FROM empresa WHERE cnpj = $1`;
+        const existing = await client.query(checkQuery, [pessoaJuridica.cnpj]);
 
-        // Inserir Sócios
+        let pessoaJuridicaId;
+        if (existing.rows.length > 0) {
+            pessoaJuridicaId = existing.rows[0].id; // Reutilizar ID se a empresa já existir
+        } else {
+            // Inserir nova empresa
+            const pessoaJuridicaQuery = `
+                INSERT INTO empresa (
+                    cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
+                    data_fundacao, capital_social, telefone, conta_bancaria, email, site,
+                    contador, telefone_contador, logradouro, numero_complemento, bairro, cidade, uf
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+                RETURNING id;
+            `;
+            const pessoaJuridicaValues = [
+                pessoaJuridica.cnpj, pessoaJuridica.razao_social, pessoaJuridica.nome_fantasia,
+                pessoaJuridica.inscricao_estadual, pessoaJuridica.ramo_atividade, pessoaJuridica.data_fundacao,
+                pessoaJuridica.capital_social_num, pessoaJuridica.telefone, pessoaJuridica.conta_bancaria,
+                pessoaJuridica.email, pessoaJuridica.site, pessoaJuridica.contador,
+                pessoaJuridica.telefone_contador, pessoaJuridica.logradouro, pessoaJuridica.numero_complemento,
+                pessoaJuridica.bairro, pessoaJuridica.cidade, pessoaJuridica.uf
+            ];
+            const pessoaJuridicaResult = await client.query(pessoaJuridicaQuery, pessoaJuridicaValues);
+            pessoaJuridicaId = pessoaJuridicaResult.rows[0].id;
+        }
+
+        // Inserir sócios
         for (const socio of socios) {
             const sociosQuery = `
                 INSERT INTO socios (
-                    nome, cep, endereco, numero, bairro, cidade, uf, telefone, email
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+                    ID_empresa, nome, cep, endereco, numero, bairro, cidade, uf, telefone, email
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
             `;
             const sociosValues = [
-                socio.nome, socio.cep, socio.endereco, socio.numero, socio.bairro,
-                socio.cidade, socio.uf, socio.telefone, socio.email,
+                pessoaJuridicaId, socio.nome, socio.cep, socio.endereco, socio.numero,
+                socio.bairro, socio.cidade, socio.uf, socio.telefone, socio.email
             ];
             await client.query(sociosQuery, sociosValues);
         }
 
-        // Inserir Referências Comerciais
+        // Inserir referências comerciais
         for (const ref of commercialRefs) {
-            const comercialQuery = `
+            const commercialQuery = `
                 INSERT INTO referenciascomerciais (
-                    pessoa_juridica_id, fornecedor, telefone, ramo_atividade, contato
+                    ID_empresa, fornecedor, telefone, ramo_atividade, contato
                 ) VALUES ($1, $2, $3, $4, $5);
             `;
-            const comercialValues = [
-                pessoaJuridicaId, ref.fornecedor, ref.telefone, ref.ramo, ref.contato,
+            const commercialValues = [
+                pessoaJuridicaId, ref.fornecedor, ref.telefone, ref.ramo_atividade, ref.contato
             ];
-            await client.query(comercialQuery, comercialValues);
+            await client.query(commercialQuery, commercialValues);
         }
 
-        // Inserir Referências Bancárias
-        for (const ref of bankRefs) {
-            const bancariaQuery = `
-                INSERT INTO bancos (
-                    banco, agencia, conta, data_abertura, telefone, gerente, observacoes
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7);
+        // Inserir referências bancárias
+        for (const bankRef of bankRefs) {
+            const bankQuery = `
+                INSERT INTO referenciasbancarias (
+                    ID_empresa, banco, agencia, conta, data_abertura, telefone, gerente, observacoes
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
             `;
-            const bancariaValues = [
-                ref.banco, ref.agencia, ref.conta, ref.dataAbertura, ref.telefone, ref.gerente, ref.observacoes,
+            const bankValues = [
+                pessoaJuridicaId, bankRef.banco, bankRef.agencia, bankRef.conta, bankRef.data_abertura,
+                bankRef.telefone, bankRef.gerente, bankRef.observacoes
             ];
-            await client.query(bancariaQuery, bancariaValues);
+            await client.query(bankQuery, bankValues);
         }
 
         // Confirma a transação
         await client.query('COMMIT');
-
-        res.json({ message: "Cadastro concluído com sucesso!" });
+        res.json({ message: 'Dados salvos com sucesso!' });
     } catch (error) {
         // Reverte a transação em caso de erro
         await client.query('ROLLBACK');
-        console.error("Erro ao salvar os dados:", error);
-        res.status(500).json({ message: "Erro ao salvar os dados." });
+        console.error('Erro ao salvar os dados:', error);
+        res.status(500).json({ message: 'Erro ao salvar os dados.', error: error.message });
     } finally {
         client.release();
     }
 });
-
 
 // Servidor rodando na porta 3000
 app.listen(3000, () => {

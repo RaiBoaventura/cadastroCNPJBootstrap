@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", () => {
         { id: "relacao_Faturamento", name: "Relação de faturamento dos últimos 12 meses" },
     ];
 
+    let isTyping = false; // Para evitar formatações simultâneas
+
     // === Validação do CNPJ ===
     function validarCNPJ(cnpj) {
         cnpj = cnpj.replace(/[^\d]+/g, '');
@@ -61,6 +63,8 @@ document.addEventListener("DOMContentLoaded", () => {
             cnpjInput.classList.add("is-invalid");
         }
     }
+
+    // === Formatar e Remover Formatação de Moeda ===
     function formatarParaMoeda(valor) {
         const numero = parseFloat(valor.replace(/[^\d.-]/g, '').replace(',', '.')) || 0;
         return numero.toLocaleString('pt-BR', {
@@ -68,48 +72,43 @@ document.addEventListener("DOMContentLoaded", () => {
             currency: 'BRL',
         });
     }
-    
+
     function removerFormatacao(valor) {
         return parseFloat(valor.replace(/[^\d.-]/g, '').replace(',', '.')) || 0;
     }
-    
+
     capitalSocialInput.addEventListener("input", () => {
-        if (isTyping) return; // Evita reentrância
+        if (isTyping) return;
         isTyping = true;
-    
-        const rawValue = capitalSocialInput.value.replace(/[^\d]/g, ''); // Apenas números
-        const numericValue = removerFormatacao(rawValue) / 100; // Divide para incluir casas decimais
-        const formattedValue = formatarParaMoeda(numericValue.toFixed(2)); // Formata valor final
-    
-        capitalSocialInput.value = formattedValue; // Exibe o valor formatado
-        capitalSocialNumInput.value = numericValue.toFixed(2); // Valor para envio ao banco
-    
+
+        const rawValue = capitalSocialInput.value.replace(/[^\d]/g, '');
+        const numericValue = removerFormatacao(rawValue) / 100;
+        const formattedValue = formatarParaMoeda(numericValue.toFixed(2));
+
+        capitalSocialInput.value = formattedValue;
+        capitalSocialNumInput.value = numericValue.toFixed(2);
+
         isTyping = false;
     });
-    
+
     capitalSocialInput.addEventListener("blur", () => {
-        // Atualiza ao sair do campo para garantir formatação final
         const numericValue = removerFormatacao(capitalSocialInput.value);
         capitalSocialInput.value = formatarParaMoeda(numericValue.toFixed(2));
         capitalSocialNumInput.value = numericValue.toFixed(2);
     });
-    
+
+    // === Preencher Dados da Empresa ===
     function preencherDadosEmpresa(data) {
-        const capitalSocialInput = document.getElementById("capital_social");
-        const capitalSocialNumInput = document.getElementById("capital_social_num");
-    
         document.getElementById("razao_social").value = data.razao_social || '';
         document.getElementById("nome_fantasia").value = data.nome_fantasia || '';
         document.getElementById("logradouro").value = data.logradouro || '';
         document.getElementById("ramo_atividade").value = data.cnae_fiscal_descricao || '';
         document.getElementById("data_fundacao").value = data.data_inicio_atividade || '';
-    
-        if (capitalSocialInput) {
-            const numericValue = parseFloat(data.capital_social || '0');
-            capitalSocialInput.value = formatarParaMoeda(numericValue.toFixed(2));
-            capitalSocialNumInput.value = numericValue.toFixed(2);
-        }
-    
+
+        const numericValue = parseFloat(data.capital_social || '0');
+        capitalSocialInput.value = formatarParaMoeda(numericValue.toFixed(2));
+        capitalSocialNumInput.value = numericValue.toFixed(2);
+
         document.getElementById("numero_complemento").value = data.numero || '';
         document.getElementById("bairro").value = data.bairro || '';
         document.getElementById("cidade").value = data.municipio || '';
@@ -124,11 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const input = document.getElementById(inputId);
         const list = document.getElementById(listId);
 
-        if (!dropZone || !input || !list) {
-            console.error(`Elemento(s) não encontrado(s): ${dropZoneId}, ${inputId}, ${listId}`);
-            return;
-        }
-
         ["dragenter", "dragover", "dragleave", "drop"].forEach(eventName => {
             dropZone.addEventListener(eventName, e => e.preventDefault());
         });
@@ -141,13 +135,8 @@ document.addEventListener("DOMContentLoaded", () => {
             dropZone.addEventListener(eventName, () => dropZone.classList.remove("drag-over"));
         });
 
-        dropZone.addEventListener("drop", e => {
-            const files = e.dataTransfer.files;
-            handleFiles(files, list);
-        });
-
+        dropZone.addEventListener("drop", e => handleFiles(e.dataTransfer.files, list));
         dropZone.addEventListener("click", () => input.click());
-
         input.addEventListener("change", () => handleFiles(input.files, list));
     }
 
@@ -174,12 +163,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Configuração das Zonas de Upload
     setupDropZone("contrato-drop-zone", "contrato_Social", "contrato-list");
     setupDropZone("cnpj-drop-zone", "cartao_CNPJ", "cnpj-list");
     setupDropZone("faturamento-drop-zone", "relacao_Faturamento", "faturamento-list");
 
-    // === Validação de Formulário ===
+    // === Validação do Formulário ===
     function validarFormulario() {
         const allFieldsFilled = Array.from(document.querySelectorAll("#pj-form input[required]"))
             .every(input => input.value.trim() !== "");
@@ -191,10 +179,8 @@ document.addEventListener("DOMContentLoaded", () => {
         continuarBtn.disabled = !(allFieldsFilled && allFilesUploaded);
     }
 
-    // Eventos
     cnpjInput.addEventListener("blur", () => {
         const cnpj = cnpjInput.value;
-
         if (validarCNPJ(cnpj)) {
             buscarDadosCNPJ(cnpj);
         } else {
@@ -202,7 +188,6 @@ document.addEventListener("DOMContentLoaded", () => {
             cnpjError.style.display = "block";
             cnpjInput.classList.add("is-invalid");
         }
-
         validarFormulario();
     });
 
@@ -215,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
             inscricao_estadual: document.getElementById("inscricao_estadual").value,
             ramo_atividade: document.getElementById("ramo_atividade").value,
             data_fundacao: document.getElementById("data_fundacao").value,
-            capital_social: capitalSocialNumInput.value, // Valor numérico
+            capital_social: capitalSocialNumInput.value,
             telefones: document.getElementById("telefones").value,
             email: document.getElementById("email").value,
             site: document.getElementById("site").value,
@@ -227,12 +212,9 @@ document.addEventListener("DOMContentLoaded", () => {
             cidade: document.getElementById("cidade").value,
             uf: document.getElementById("uf").value,
         };
-    
+
         try {
-            // Armazena os dados no localStorage
-            localStorage.setItem("empresaCNPJ", JSON.stringify(pessoaJuridica.cnpj));
-    
-            // Redireciona para a página de sócios
+            localStorage.setItem("pessoaJuridica", JSON.stringify(pessoaJuridica));
             window.location.href = "socios.html";
         } catch (error) {
             console.error("Erro ao armazenar os dados:", error);

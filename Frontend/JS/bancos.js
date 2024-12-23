@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const concluirCadastroBtn = document.getElementById("concluirCadastroBtn");
     const MAX_REFERENCES = 3;
 
-    // === Função Genérica para Adicionar Referências ===
     function adicionarReferencia(container, className, template, maxRefs, alertMsg) {
         const currentRefs = container.querySelectorAll(`.${className}`).length;
         if (currentRefs >= maxRefs) {
@@ -17,15 +16,13 @@ document.addEventListener("DOMContentLoaded", () => {
         refDiv.innerHTML = template;
         container.appendChild(refDiv);
 
-        // Adicionar eventos de validação
         refDiv.querySelectorAll("input, textarea").forEach(input => {
             input.addEventListener("input", validarFormulario);
         });
 
-        validarFormulario(); // Revalida ao adicionar nova referência
+        validarFormulario();
     }
 
-    // === Template de Referências ===
     const comercialTemplate = `
         <h4 class="card-title">Referência Comercial</h4>
         <div class="mb-3">
@@ -80,17 +77,12 @@ document.addEventListener("DOMContentLoaded", () => {
         <button type="button" class="btn btn-danger remove-button mt-2">Remover Referência</button>
     `;
 
-    // === Validação de Formulário ===
     function validarFormulario() {
         const allRequiredFields = document.querySelectorAll(".required-field");
-        const allFilled = Array.from(allRequiredFields).every(input => {
-            return input.value.trim() !== "";
-        });
-
-        concluirCadastroBtn.disabled = !allFilled; // Habilita ou desabilita o botão
+        const allFilled = Array.from(allRequiredFields).every(input => input.value.trim() !== "");
+        concluirCadastroBtn.disabled = !allFilled;
     }
 
-    // === Adicionar Referências ===
     window.adicionarReferenciaComercial = function () {
         adicionarReferencia(
             commercialRefsContainer,
@@ -111,12 +103,11 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     };
 
-    // === Remover Referências com Delegação de Eventos ===
     commercialRefsContainer.addEventListener("click", (event) => {
         if (event.target.classList.contains("remove-button")) {
             const refDiv = event.target.closest(".commercial-ref-form");
             if (refDiv) refDiv.remove();
-            validarFormulario(); // Revalida após remoção
+            validarFormulario();
         }
     });
 
@@ -124,20 +115,53 @@ document.addEventListener("DOMContentLoaded", () => {
         if (event.target.classList.contains("remove-button")) {
             const refDiv = event.target.closest(".bank-ref-form");
             if (refDiv) refDiv.remove();
-            validarFormulario(); // Revalida após remoção
+            validarFormulario();
         }
     });
 
-    // === Evento de Concluir Cadastro ===
-    concluirCadastroBtn.addEventListener("click", async () => {
-        const commercialRefs = Array.from(commercialRefsContainer.querySelectorAll(".commercial-ref-form")).map(ref => ({
+    function validarEPrepararPayload(commercialRefs, bankRefs, pessoaJuridica, socios) {
+
+        const referenciasComerciaisValidas = commercialRefs.every(ref => 
+            ref.fornecedor && ref.telefone && ref.ramo_atividade && ref.contato
+        );
+        if (!referenciasComerciaisValidas) {
+            alert("Todas as referências comerciais precisam estar completas.");
+            return null;
+        }
+
+        const referenciasBancariasValidas = bankRefs.every(ref => 
+            ref.banco && ref.agencia && ref.conta && ref.dataAbertura && ref.telefone && ref.gerente
+        );
+        if (!referenciasBancariasValidas) {
+            alert("Todas as referências bancárias precisam estar completas.");
+            return null;
+        }
+
+        const sociosValidos = socios.every(socio => 
+            socio.nome && socio.telefone && socio.email
+        );
+        if (!sociosValidos) {
+            alert("Todos os sócios precisam ter nome, telefone e e-mail preenchidos.");
+            return null;
+        }
+
+        return {
+            pessoaJuridica,
+            socios,
+            commercialRefs,
+            bankRefs,
+        };
+    }
+
+    async function salvarDadosNoServidor() {
+        const commercialRefs = Array.from(document.querySelectorAll(".commercial-ref-form")).map(ref => ({
             fornecedor: ref.querySelector('input[placeholder="Nome do Fornecedor"]').value.trim(),
             telefone: ref.querySelector('input[placeholder="Telefone"]').value.trim(),
-            ramo: ref.querySelector('input[placeholder="Ramo de Atividade"]').value.trim(),
+            ramo_atividade: ref.querySelector('input[placeholder="Ramo de Atividade"]').value.trim(),
             contato: ref.querySelector('input[placeholder="Nome do Contato"]').value.trim(),
         }));
 
-        const bankRefs = Array.from(bankRefsContainer.querySelectorAll(".bank-ref-form")).map(ref => ({
+        const bankRefs = Array.from(document.querySelectorAll(".bank-ref-form")).map(ref => ({
             banco: ref.querySelector('input[placeholder="Nome do Banco"]').value.trim(),
             agencia: ref.querySelector('input[placeholder="Agência"]').value.trim(),
             conta: ref.querySelector('input[placeholder="Conta"]').value.trim(),
@@ -147,38 +171,42 @@ document.addEventListener("DOMContentLoaded", () => {
             observacoes: ref.querySelector('textarea[placeholder="Observações"]').value.trim(),
         }));
 
+        const pessoaJuridica = JSON.parse(localStorage.getItem("pessoaJuridica"));
+        const socios = JSON.parse(localStorage.getItem("sociosData"));
+
+        const payload = validarEPrepararPayload(commercialRefs, bankRefs, pessoaJuridica, socios);
+        if (!payload) return;
+
+        console.log("Payload enviado:", payload);
+
         try {
             const response = await fetch("http://localhost:3000/salvar-tudo", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    commercialRefs,
-                    bankRefs,
-                    pessoaJuridica: JSON.parse(localStorage.getItem("pessoaJuridica")),
-                    socios: JSON.parse(localStorage.getItem("sociosData")),
-                }),
+                body: JSON.stringify(payload),
             });
 
-            if (!response.ok) throw new Error("Erro ao enviar os dados.");
+            if (!response.ok) {
+                const errorDetails = await response.json();
+                console.error("Erro no servidor:", errorDetails);
+                throw new Error(errorDetails.message || "Erro ao salvar os dados.");
+            }
 
             const result = await response.json();
-            alert(result.message || "Cadastro concluído com sucesso!");
+            alert(result.message || "Dados salvos com sucesso!");
+            limparDadosLocalStorage();
         } catch (error) {
             console.error("Erro ao concluir cadastro:", error);
             alert("Erro ao concluir cadastro. Tente novamente.");
         }
-    });
+    }
+
     function limparDadosLocalStorage() {
         localStorage.removeItem("pessoaJuridica");
         localStorage.removeItem("sociosData");
     }
-    
-    concluirCadastroBtn.addEventListener("click", async () => {
-        // Após salvar os dados
-        await salvarDadosNoServidor(); // Função responsável por salvar
-        limparDadosLocalStorage(); // Limpa os dados
-    });
-    
-    // Revalida ao carregar a página
+
+    concluirCadastroBtn.addEventListener("click", salvarDadosNoServidor);
+
     validarFormulario();
 });

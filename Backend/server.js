@@ -158,6 +158,10 @@ app.delete('/empresa/:id', async (req, res) => {
 app.post('/salvar-tudo', async (req, res) => {
     const { pessoaJuridica, socios, commercialRefs, bankRefs } = req.body;
 
+    if (!pessoaJuridica || !pessoaJuridica.cnpj) {
+        return res.status(400).json({ message: 'Dados da pessoa jurídica são obrigatórios.' });
+    }
+
     const client = await pool.connect();
 
     try {
@@ -193,12 +197,21 @@ app.post('/salvar-tudo', async (req, res) => {
             pessoaJuridicaId = pessoaJuridicaResult.rows[0].id;
         }
 
-        // Inserir sócios
+        // Inserir ou atualizar sócios
         for (const socio of socios) {
             const sociosQuery = `
                 INSERT INTO socios (
                     ID_empresa, nome, cep, endereco, numero, bairro, cidade, uf, telefone, email
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                ON CONFLICT (ID_empresa, nome) DO UPDATE SET
+                    cep = EXCLUDED.cep,
+                    endereco = EXCLUDED.endereco,
+                    numero = EXCLUDED.numero,
+                    bairro = EXCLUDED.bairro,
+                    cidade = EXCLUDED.cidade,
+                    uf = EXCLUDED.uf,
+                    telefone = EXCLUDED.telefone,
+                    email = EXCLUDED.email;
             `;
             const sociosValues = [
                 pessoaJuridicaId, socio.nome, socio.cep, socio.endereco, socio.numero,
@@ -206,13 +219,18 @@ app.post('/salvar-tudo', async (req, res) => {
             ];
             await client.query(sociosQuery, sociosValues);
         }
+        
 
-        // Inserir referências comerciais
+        // Inserir ou atualizar referências comerciais
         for (const ref of commercialRefs) {
             const commercialQuery = `
                 INSERT INTO referenciascomerciais (
                     ID_empresa, fornecedor, telefone, ramo_atividade, contato
-                ) VALUES ($1, $2, $3, $4, $5);
+                ) VALUES ($1, $2, $3, $4, $5)
+                ON CONFLICT (ID_empresa, fornecedor) DO UPDATE SET
+                    telefone = EXCLUDED.telefone,
+                    ramo_atividade = EXCLUDED.ramo_atividade,
+                    contato = EXCLUDED.contato;
             `;
             const commercialValues = [
                 pessoaJuridicaId, ref.fornecedor, ref.telefone, ref.ramo_atividade, ref.contato
@@ -220,12 +238,18 @@ app.post('/salvar-tudo', async (req, res) => {
             await client.query(commercialQuery, commercialValues);
         }
 
-        // Inserir referências bancárias
+        // Inserir ou atualizar referências bancárias
         for (const bankRef of bankRefs) {
             const bankQuery = `
                 INSERT INTO referenciasbancarias (
                     ID_empresa, banco, agencia, conta, data_abertura, telefone, gerente, observacoes
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                ON CONFLICT (ID_empresa, banco, agencia) DO UPDATE SET
+                    conta = EXCLUDED.conta,
+                    data_abertura = EXCLUDED.data_abertura,
+                    telefone = EXCLUDED.telefone,
+                    gerente = EXCLUDED.gerente,
+                    observacoes = EXCLUDED.observacoes;
             `;
             const bankValues = [
                 pessoaJuridicaId, bankRef.banco, bankRef.agencia, bankRef.conta, bankRef.data_abertura,

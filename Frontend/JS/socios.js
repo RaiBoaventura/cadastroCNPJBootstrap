@@ -43,6 +43,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 <label for="uf-socio-${index}" class="form-label">UF:</label>
                 <input type="text" id="uf-socio-${index}" class="form-control" value="${socio.uf || ''}">
             </div>
+            <div class="mb-3">
+                <label for="telefone-socio-${index}" class="form-label">Telefone:</label>
+                <input type="text" id="telefone-socio-${index}" class="form-control required-socio" value="${socio.telefone || ''}" placeholder="Ex: (11) 98765-4321">
+            </div>
+            <div class="mb-3">
+                <label for="email-socio-${index}" class="form-label">Email:</label>
+                <input type="email" id="email-socio-${index}" class="form-control required-socio" value="${socio.email || ''}" placeholder="Ex: exemplo@email.com">
+            </div>
         `;
         socioContainer.appendChild(socioDiv);
         adicionarEventoCEP(index);
@@ -53,14 +61,14 @@ document.addEventListener("DOMContentLoaded", () => {
             console.warn("CNPJ não encontrado no localStorage.");
             return;
         }
-    
+
         try {
             console.log(`Buscando sócios para o CNPJ: ${cnpj}`);
             const response = await fetch(`http://localhost:3000/cnpj/${cnpj}`);
             if (!response.ok) throw new Error("Erro ao buscar sócios");
             const data = await response.json();
             console.log("Dados recebidos da API:", data);
-    
+
             if (data.qsa && Array.isArray(data.qsa)) {
                 data.qsa.forEach((socio, index) => {
                     const novoSocio = {
@@ -71,6 +79,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         bairro: "",
                         cidade: "",
                         uf: "",
+                        telefone: "",
+                        email: "",
                     };
                     sociosData.push(novoSocio);
                     criarCamposSocio(novoSocio, socioIndex++);
@@ -118,6 +128,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function validarSocios() {
+        const requiredFields = document.querySelectorAll(".required-socio");
+        for (let field of requiredFields) {
+            if (field.value.trim() === "") {
+                alert("Todos os sócios precisam ter nome, telefone e email preenchidos.");
+                return false;
+            }
+        }
+        return true;
+    }
+
     async function carregarSocios() {
         if (cnpj) {
             await buscarSociosPorCNPJ(cnpj);
@@ -125,20 +146,25 @@ document.addEventListener("DOMContentLoaded", () => {
             console.warn("CNPJ não disponível no localStorage para carregar os sócios.");
         }
     }
-    function limparDadosLocalStorage() {
-        localStorage.removeItem("pessoaJuridica");
-        localStorage.removeItem("sociosData");
-    }
-    
-    concluirCadastroBtn.addEventListener("click", async () => {
-        // Após salvar os dados
-        await salvarDadosNoServidor(); // Função responsável por salvar
-        limparDadosLocalStorage(); // Limpa os dados
-    });
-    
+
     carregarSocios();
 
     avancarBtn.addEventListener("click", () => {
+        if (!validarSocios()) return;
+
+        // Atualizar os dados dos sócios preenchidos no DOM
+        sociosData = sociosData.map((socio, index) => ({
+            nome: document.getElementById(`nome-socio-${index}`).value.trim(),
+            cep: document.getElementById(`cep-socio-${index}`).value.trim(),
+            endereco: document.getElementById(`endereco-socio-${index}`).value.trim(),
+            numero: document.getElementById(`numero-socio-${index}`).value.trim(),
+            bairro: document.getElementById(`bairro-socio-${index}`).value.trim(),
+            cidade: document.getElementById(`cidade-socio-${index}`).value.trim(),
+            uf: document.getElementById(`uf-socio-${index}`).value.trim(),
+            telefone: document.getElementById(`telefone-socio-${index}`).value.trim(),
+            email: document.getElementById(`email-socio-${index}`).value.trim(),
+        }));
+
         localStorage.setItem("sociosData", JSON.stringify(sociosData));
         window.location.href = "bancos.html";
     });

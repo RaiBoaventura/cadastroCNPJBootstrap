@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <h5>Sócio ${index + 1}</h5>
             <div class="mb-3">
                 <label for="nome-socio-${index}" class="form-label">Nome:</label>
-                <input type="text" id="nome-socio-${index}" class="form-control required-socio" value="${socio.nome || ''}" readonly>
+                <input type="text" id="nome-socio-${index}" class="form-control required-socio" value="${socio.nome || ''}">
             </div>
             <div class="mb-3">
                 <label for="cep-socio-${index}" class="form-label">CEP:</label>
@@ -55,7 +55,55 @@ document.addEventListener("DOMContentLoaded", () => {
         socioContainer.appendChild(socioDiv);
         adicionarEventoCEP(index);
     }
-
+    function criarCamposSocio(socio = {}, index) {
+        const socioDiv = document.createElement("div");
+        socioDiv.classList.add("card", "p-4", "mb-4");
+        socioDiv.id = `socio-${index}`;
+        socioDiv.innerHTML = `
+            <h5>Sócio ${index + 1}</h5>
+            <div class="mb-3">
+                <label for="nome-socio-${index}" class="form-label">Nome:</label>
+                <input type="text" id="nome-socio-${index}" class="form-control required-socio" value="${socio.nome || ''}" readonly>
+            </div>
+            <div class="mb-3">
+                <label for="cep-socio-${index}" class="form-label">CEP:</label>
+                <input type="text" id="cep-socio-${index}" class="form-control" value="${socio.cep || ''}" placeholder="Ex: 12345678">
+            </div>
+            <div class="mb-3">
+                <label for="endereco-socio-${index}" class="form-label">Endereço:</label>
+                <input type="text" id="endereco-socio-${index}" class="form-control" value="${socio.endereco || ''}">
+            </div>
+            <div class="mb-3">
+                <label for="numero-socio-${index}" class="form-label">Número:</label>
+                <input type="text" id="numero-socio-${index}" class="form-control" value="${socio.numero || ''}">
+            </div>
+            <div class="mb-3">
+                <label for="bairro-socio-${index}" class="form-label">Bairro:</label>
+                <input type="text" id="bairro-socio-${index}" class="form-control" value="${socio.bairro || ''}">
+            </div>
+            <div class="mb-3">
+                <label for="cidade-socio-${index}" class="form-label">Cidade:</label>
+                <input type="text" id="cidade-socio-${index}" class="form-control" value="${socio.cidade || ''}">
+            </div>
+            <div class="mb-3">
+                <label for="uf-socio-${index}" class="form-label">UF:</label>
+                <input type="text" id="uf-socio-${index}" class="form-control" value="${socio.uf || ''}">
+            </div>
+            <div class="mb-3">
+                <label for="telefone-socio-${index}" class="form-label">Telefone:</label>
+                <input type="text" id="telefone-socio-${index}" class="form-control required-socio" value="${socio.telefone || ''}" placeholder="Ex: (11) 98765-4321">
+            </div>
+            <div class="mb-3">
+                <label for="email-socio-${index}" class="form-label">Email:</label>
+                <input type="email" id="email-socio-${index}" class="form-control required-socio" value="${socio.email || ''}" placeholder="Ex: exemplo@email.com">
+            </div>
+            <button type="button" class="btn btn-danger remove-socio-btn" data-index="${index}">Remover Sócio</button>
+        `;
+        socioContainer.appendChild(socioDiv);
+        adicionarEventoCEP(index);
+        adicionarEventoRemoverSocio(index);
+    }
+    
     async function buscarSociosPorCNPJ(cnpj) {
         if (!cnpj) {
             console.warn("CNPJ não encontrado no localStorage.");
@@ -146,9 +194,51 @@ document.addEventListener("DOMContentLoaded", () => {
             console.warn("CNPJ não disponível no localStorage para carregar os sócios.");
         }
     }
-
+    function adicionarEventoRemoverSocio(index) {
+        const removeBtn = document.querySelector(`#socio-${index} .remove-socio-btn`);
+        if (removeBtn) {
+            removeBtn.addEventListener("click", () => {
+                // Remover do array de dados
+                sociosData.splice(index, 1);
+    
+                // Remover do DOM
+                const socioDiv = document.getElementById(`socio-${index}`);
+                if (socioDiv) {
+                    socioContainer.removeChild(socioDiv);
+                }
+    
+                // Atualizar IDs e reordenar os índices
+                atualizarSocios();
+            });
+        }
+    }
+    function atualizarSocios() {
+        socioContainer.innerHTML = ""; // Limpar o container
+        sociosData.forEach((socio, index) => {
+            criarCamposSocio(socio, index); // Recriar os campos com novos índices
+        });
+        socioIndex = sociosData.length; // Atualizar o índice global
+    }
+    
     carregarSocios();
-
+    addSocioBtn.addEventListener("click", () => {
+        // Criar um novo sócio vazio
+        const novoSocio = {
+            nome: "",
+            cep: "",
+            endereco: "",
+            numero: "",
+            bairro: "",
+            cidade: "",
+            uf: "",
+            telefone: "",
+            email: "",
+        };
+    
+        // Adicionar aos dados dos sócios e criar o campo no DOM
+        sociosData.push(novoSocio);
+        criarCamposSocio(novoSocio, socioIndex++);
+    });
     avancarBtn.addEventListener("click", () => {
         if (!validarSocios()) return;
 

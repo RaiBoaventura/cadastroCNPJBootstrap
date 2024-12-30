@@ -212,9 +212,10 @@ document.addEventListener("DOMContentLoaded", () => {
             cidade: document.getElementById("cidade").value,
             uf: document.getElementById("uf").value,
         };
-
+    
         try {
             localStorage.setItem("pessoaJuridica", JSON.stringify(pessoaJuridica));
+            localStorage.setItem("empresaCNPJ", pessoaJuridica.cnpj); // Salva apenas o CNPJ
             window.location.href = "socios.html";
         } catch (error) {
             console.error("Erro ao armazenar os dados:", error);

@@ -2,8 +2,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const socioContainer = document.getElementById("socio-container");
     const addSocioBtn = document.getElementById("add-socio-btn");
     const avancarBtn = document.getElementById("avancar-btn");
-
     const cnpj = JSON.parse(localStorage.getItem("empresaCNPJ"));
+
     console.log("CNPJ recuperado do localStorage:", cnpj);
 
     let sociosData = [];
@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <h5>Sócio ${index + 1}</h5>
             <div class="mb-3">
                 <label for="nome-socio-${index}" class="form-label">Nome:</label>
-                <input type="text" id="nome-socio-${index}" class="form-control required-socio" value="${socio.nome || ''}" readonly>
+                <input type="text" id="nome-socio-${index}" class="form-control required-socio" value="${socio.nome || ''}" >
             </div>
             <div class="mb-3">
                 <label for="cep-socio-${index}" class="form-label">CEP:</label>

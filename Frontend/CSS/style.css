@@ -17,6 +17,18 @@ body {
     padding: 10px 15px;
     transition: box-shadow 0.3s ease;
 }
+.is-invalid {
+    border-color: #dc3545;
+}
+
+.is-valid {
+    border-color: #28a745;
+}
+
+.error-message {
+    font-size: 0.875em;
+    color: #dc3545;
+}
 
 tr{
     color: white;

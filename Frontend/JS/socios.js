@@ -9,6 +9,102 @@ document.addEventListener("DOMContentLoaded", () => {
     let sociosData = [];
     let socioIndex = 0;
 
+    // Sincronizar os dados do DOM com o array sociosData
+    function sincronizarDados() {
+        sociosData = [];
+        document.querySelectorAll(".card").forEach((card, index) => {
+            sociosData.push({
+                nome: document.getElementById(`nome-socio-${index}`).value.trim(),
+                cep: document.getElementById(`cep-socio-${index}`).value.trim(),
+                endereco: document.getElementById(`endereco-socio-${index}`).value.trim(),
+                numero: document.getElementById(`numero-socio-${index}`).value.trim(),
+                bairro: document.getElementById(`bairro-socio-${index}`).value.trim(),
+                cidade: document.getElementById(`cidade-socio-${index}`).value.trim(),
+                uf: document.getElementById(`uf-socio-${index}`).value.trim(),
+                telefone: document.getElementById(`telefone-socio-${index}`).value.trim(),
+                email: document.getElementById(`email-socio-${index}`).value.trim(),
+            });
+        });
+    }
+    function adicionarEventoCEP(index) {
+        const cepInput = document.getElementById(`cep-socio-${index}`);
+        const enderecoInput = document.getElementById(`endereco-socio-${index}`);
+        const bairroInput = document.getElementById(`bairro-socio-${index}`);
+        const cidadeInput = document.getElementById(`cidade-socio-${index}`);
+        const ufInput = document.getElementById(`uf-socio-${index}`);
+    
+        let errorMessage = document.createElement("span");
+        errorMessage.className = "error-message text-danger";
+        errorMessage.style.display = "none";
+        errorMessage.id = `cep-error-${index}`;
+        cepInput.parentNode.appendChild(errorMessage);
+    
+        if (cepInput) {
+            cepInput.addEventListener("blur", async () => {
+                const cep = cepInput.value.replace(/\D/g, ''); // Remover caracteres não numéricos
+                if (!cep || cep.length !== 8) {
+                    errorMessage.textContent = "CEP inválido. Insira um CEP com 8 dígitos.";
+                    errorMessage.style.display = "block";
+                    cepInput.classList.add("is-invalid");
+                    limparEndereco(index); // Limpa os campos relacionados
+                    return;
+                }
+    
+                try {
+                    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                    if (!response.ok) throw new Error("Erro ao buscar endereço");
+                    const data = await response.json();
+    
+                    if (data.erro) {
+                        errorMessage.textContent = "CEP não encontrado. Verifique e tente novamente.";
+                        errorMessage.style.display = "block";
+                        cepInput.classList.add("is-invalid");
+                        limparEndereco(index);
+                        return;
+                    }
+    
+                    // Preencher os campos de endereço automaticamente
+                    enderecoInput.value = data.logradouro || '';
+                    bairroInput.value = data.bairro || '';
+                    cidadeInput.value = data.localidade || '';
+                    ufInput.value = data.uf || '';
+    
+                    errorMessage.style.display = "none";
+                    cepInput.classList.remove("is-invalid");
+                    cepInput.classList.add("is-valid");
+                } catch (error) {
+                    console.error("Erro ao buscar endereço:", error);
+                    errorMessage.textContent = "Erro ao buscar endereço. Tente novamente.";
+                    errorMessage.style.display = "block";
+                    cepInput.classList.add("is-invalid");
+                    limparEndereco(index);
+                }
+            });
+        }
+    }
+    
+    function limparEndereco(index) {
+        document.getElementById(`endereco-socio-${index}`).value = '';
+        document.getElementById(`bairro-socio-${index}`).value = '';
+        document.getElementById(`cidade-socio-${index}`).value = '';
+        document.getElementById(`uf-socio-${index}`).value = '';
+    }
+    
+    // Atualizar os índices após exclusões ou alterações
+    function atualizarIndices() {
+        document.querySelectorAll(".card").forEach((card, newIndex) => {
+            card.id = `socio-${newIndex}`;
+            card.querySelector("h5").textContent = `Sócio ${newIndex + 1}`;
+            card.querySelectorAll("input").forEach(input => {
+                const idParts = input.id.split("-");
+                idParts[idParts.length - 1] = newIndex;
+                input.id = idParts.join("-");
+            });
+            card.querySelector(".remove-socio-btn").dataset.index = newIndex;
+        });
+        socioIndex = sociosData.length;
+    }
+
     function criarCamposSocio(socio = {}, index) {
         const socioDiv = document.createElement("div");
         socioDiv.classList.add("card", "p-4", "mb-4");
@@ -45,82 +141,105 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
             <div class="mb-3">
                 <label for="telefone-socio-${index}" class="form-label">Telefone:</label>
-                <input type="text" id="telefone-socio-${index}" class="form-control required-socio" value="${socio.telefone || ''}" placeholder="Ex: (11) 98765-4321">
+                <input type="text" id="telefone-socio-${index}" class="form-control required-socio" value="${socio.telefone || ''}">
             </div>
             <div class="mb-3">
                 <label for="email-socio-${index}" class="form-label">Email:</label>
-                <input type="email" id="email-socio-${index}" class="form-control required-socio" value="${socio.email || ''}" placeholder="Ex: exemplo@email.com">
-            </div>
-        `;
-        socioContainer.appendChild(socioDiv);
-        adicionarEventoCEP(index);
-    }
-    function criarCamposSocio(socio = {}, index) {
-        const socioDiv = document.createElement("div");
-        socioDiv.classList.add("card", "p-4", "mb-4");
-        socioDiv.id = `socio-${index}`;
-        socioDiv.innerHTML = `
-            <h5>Sócio ${index + 1}</h5>
-            <div class="mb-3">
-                <label for="nome-socio-${index}" class="form-label">Nome:</label>
-                <input type="text" id="nome-socio-${index}" class="form-control required-socio" value="${socio.nome || ''}" >
-            </div>
-            <div class="mb-3">
-                <label for="cep-socio-${index}" class="form-label">CEP:</label>
-                <input type="text" id="cep-socio-${index}" class="form-control" value="${socio.cep || ''}" placeholder="Ex: 12345678">
-            </div>
-            <div class="mb-3">
-                <label for="endereco-socio-${index}" class="form-label">Endereço:</label>
-                <input type="text" id="endereco-socio-${index}" class="form-control" value="${socio.endereco || ''}">
-            </div>
-            <div class="mb-3">
-                <label for="numero-socio-${index}" class="form-label">Número:</label>
-                <input type="text" id="numero-socio-${index}" class="form-control" value="${socio.numero || ''}">
-            </div>
-            <div class="mb-3">
-                <label for="bairro-socio-${index}" class="form-label">Bairro:</label>
-                <input type="text" id="bairro-socio-${index}" class="form-control" value="${socio.bairro || ''}">
-            </div>
-            <div class="mb-3">
-                <label for="cidade-socio-${index}" class="form-label">Cidade:</label>
-                <input type="text" id="cidade-socio-${index}" class="form-control" value="${socio.cidade || ''}">
-            </div>
-            <div class="mb-3">
-                <label for="uf-socio-${index}" class="form-label">UF:</label>
-                <input type="text" id="uf-socio-${index}" class="form-control" value="${socio.uf || ''}">
-            </div>
-            <div class="mb-3">
-                <label for="telefone-socio-${index}" class="form-label">Telefone:</label>
-                <input type="text" id="telefone-socio-${index}" class="form-control required-socio" value="${socio.telefone || ''}" placeholder="Ex: (11) 98765-4321">
-            </div>
-            <div class="mb-3">
-                <label for="email-socio-${index}" class="form-label">Email:</label>
-                <input type="email" id="email-socio-${index}" class="form-control required-socio" value="${socio.email || ''}" placeholder="Ex: exemplo@email.com">
+                <input type="email" id="email-socio-${index}" class="form-control required-socio" value="${socio.email || ''}">
             </div>
             <button type="button" class="btn btn-danger remove-socio-btn" data-index="${index}">Remover Sócio</button>
         `;
         socioContainer.appendChild(socioDiv);
-        adicionarEventoCEP(index);
+    
+        // Chamar a função para associar o evento ao botão de remoção
         adicionarEventoRemoverSocio(index);
+    
+        // Chamar a função para associar o evento ao campo de CEP
+        adicionarEventoCEP(index);
     }
     
-    async function buscarSociosPorCNPJ(cnpj) {
+    
+    function validarSocios() {
+        let valid = true;
+    
+        // Iterar sobre cada sócio no DOM
+        document.querySelectorAll(".card").forEach((card, index) => {
+            const camposObrigatorios = [
+                `nome-socio-${index}`,
+                `cep-socio-${index}`,
+                `endereco-socio-${index}`,
+                `numero-socio-${index}`,
+                `bairro-socio-${index}`,
+                `cidade-socio-${index}`,
+                `uf-socio-${index}`,
+                `telefone-socio-${index}`,
+                `email-socio-${index}`
+            ];
+    
+            camposObrigatorios.forEach(campoId => {
+                const campo = document.getElementById(campoId);
+    
+                if (!campo.value.trim()) {
+                    campo.classList.add("is-invalid"); // Destacar como inválido
+                    valid = false; // Marcar como inválido
+                } else {
+                    campo.classList.remove("is-invalid"); // Remover erro se válido
+                    campo.classList.add("is-valid"); // Adicionar classe de válido
+                }
+            });
+        });
+    
+        if (!valid) {
+            alert("Por favor, preencha todos os campos de todos os sócios antes de avançar.");
+        }
+    
+        return valid;
+    }
+    
+    
+    // Adicionar evento para remover sócio
+    function adicionarEventoRemoverSocio(index) {
+        const removeBtn = document.querySelector(`#socio-${index} .remove-socio-btn`);
+        if (removeBtn) {
+            removeBtn.addEventListener("click", () => {
+                sincronizarDados();
+                sociosData.splice(index, 1);
+                socioContainer.removeChild(document.getElementById(`socio-${index}`));
+                atualizarIndices();
+            });
+        }
+    }
+
+    // Adicionar um novo sócio
+    addSocioBtn.addEventListener("click", () => {
+        sincronizarDados();
+        const novoSocio = { nome: "", cep: "", endereco: "", numero: "", bairro: "", cidade: "", uf: "", telefone: "", email: "" };
+        sociosData.push(novoSocio);
+        criarCamposSocio(novoSocio, socioIndex++);
+    });
+
+    // Validar dados antes de avançar
+    avancarBtn.addEventListener("click", () => {
+        if (!validarSocios()) return;
+        sincronizarDados();
+        localStorage.setItem("sociosData", JSON.stringify(sociosData));
+        window.location.href = "bancos.html";
+    });
+
+    // Carregar sócios com base no CNPJ
+    async function carregarSocios() {
         if (!cnpj) {
-            console.warn("CNPJ não encontrado no localStorage.");
+            console.warn("CNPJ não disponível no localStorage.");
             return;
         }
-
         try {
-            console.log(`Buscando sócios para o CNPJ: ${cnpj}`);
             const response = await fetch(`http://localhost:3000/cnpj/${cnpj}`);
             if (!response.ok) throw new Error("Erro ao buscar sócios");
             const data = await response.json();
-            console.log("Dados recebidos da API:", data);
-
             if (data.qsa && Array.isArray(data.qsa)) {
                 data.qsa.forEach((socio, index) => {
-                    const novoSocio = {
-                        nome: socio.nome || `Sócio ${index + 1}`,
+                    sociosData.push({
+                        nome: socio.nome || "",
                         cep: "",
                         endereco: "",
                         numero: "",
@@ -129,133 +248,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         uf: "",
                         telefone: "",
                         email: "",
-                    };
-                    sociosData.push(novoSocio);
-                    criarCamposSocio(novoSocio, socioIndex++);
+                    });
+                    criarCamposSocio(sociosData[sociosData.length - 1], socioIndex++);
                 });
-            } else {
-                console.warn("Nenhum sócio encontrado para o CNPJ fornecido.");
             }
         } catch (error) {
-            console.error("Erro ao buscar sócios:", error);
+            console.error("Erro ao carregar sócios:", error);
         }
     }
 
-    function adicionarEventoCEP(index) {
-        const cepInput = document.getElementById(`cep-socio-${index}`);
-        if (cepInput) {
-            cepInput.addEventListener("blur", () => {
-                const cep = cepInput.value.replace(/\D/g, '');
-                buscarEndereco(cep, index);
-            });
-        }
-    }
-
-    async function buscarEndereco(cep, index) {
-        if (!cep || cep.length !== 8) {
-            alert("Por favor, insira um CEP válido com 8 dígitos.");
-            return;
-        }
-        try {
-            const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-            if (!response.ok) throw new Error("Erro ao buscar endereço");
-            const data = await response.json();
-
-            if (data.erro) {
-                alert("CEP não encontrado. Verifique e tente novamente.");
-                return;
-            }
-
-            document.getElementById(`endereco-socio-${index}`).value = data.logradouro || '';
-            document.getElementById(`bairro-socio-${index}`).value = data.bairro || '';
-            document.getElementById(`cidade-socio-${index}`).value = data.localidade || '';
-            document.getElementById(`uf-socio-${index}`).value = data.uf || '';
-        } catch (error) {
-            console.error("Erro ao buscar endereço:", error);
-            alert("Houve um erro ao buscar o endereço. Tente novamente mais tarde.");
-        }
-    }
-
-    function validarSocios() {
-        const requiredFields = document.querySelectorAll(".required-socio");
-        for (let field of requiredFields) {
-            if (field.value.trim() === "") {
-                alert("Todos os sócios precisam ter nome, telefone e email preenchidos.");
-                return false;
-            }
-        }
-        return true;
-    }
-
-    async function carregarSocios() {
-        if (cnpj) {
-            await buscarSociosPorCNPJ(cnpj);
-        } else {
-            console.warn("CNPJ não disponível no localStorage para carregar os sócios.");
-        }
-    }
-    function adicionarEventoRemoverSocio(index) {
-        const removeBtn = document.querySelector(`#socio-${index} .remove-socio-btn`);
-        if (removeBtn) {
-            removeBtn.addEventListener("click", () => {
-                // Remover do array de dados
-                sociosData.splice(index, 1);
-    
-                // Remover do DOM
-                const socioDiv = document.getElementById(`socio-${index}`);
-                if (socioDiv) {
-                    socioContainer.removeChild(socioDiv);
-                }
-    
-                // Atualizar IDs e reordenar os índices
-                atualizarSocios();
-            });
-        }
-    }
-    function atualizarSocios() {
-        socioContainer.innerHTML = ""; // Limpar o container
-        sociosData.forEach((socio, index) => {
-            criarCamposSocio(socio, index); // Recriar os campos com novos índices
-        });
-        socioIndex = sociosData.length; // Atualizar o índice global
-    }
     
     carregarSocios();
-    addSocioBtn.addEventListener("click", () => {
-        // Criar um novo sócio vazio
-        const novoSocio = {
-            nome: "",
-            cep: "",
-            endereco: "",
-            numero: "",
-            bairro: "",
-            cidade: "",
-            uf: "",
-            telefone: "",
-            email: "",
-        };
-    
-        // Adicionar aos dados dos sócios e criar o campo no DOM
-        sociosData.push(novoSocio);
-        criarCamposSocio(novoSocio, socioIndex++);
-    });
-    avancarBtn.addEventListener("click", () => {
-        if (!validarSocios()) return;
-
-        // Atualizar os dados dos sócios preenchidos no DOM
-        sociosData = sociosData.map((socio, index) => ({
-            nome: document.getElementById(`nome-socio-${index}`).value.trim(),
-            cep: document.getElementById(`cep-socio-${index}`).value.trim(),
-            endereco: document.getElementById(`endereco-socio-${index}`).value.trim(),
-            numero: document.getElementById(`numero-socio-${index}`).value.trim(),
-            bairro: document.getElementById(`bairro-socio-${index}`).value.trim(),
-            cidade: document.getElementById(`cidade-socio-${index}`).value.trim(),
-            uf: document.getElementById(`uf-socio-${index}`).value.trim(),
-            telefone: document.getElementById(`telefone-socio-${index}`).value.trim(),
-            email: document.getElementById(`email-socio-${index}`).value.trim(),
-        }));
-
-        localStorage.setItem("sociosData", JSON.stringify(sociosData));
-        window.location.href = "bancos.html";
-    });
 });

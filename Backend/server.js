@@ -188,7 +188,7 @@ app.post('/salvar-tudo', async (req, res) => {
             const pessoaJuridicaValues = [
                 pessoaJuridica.cnpj, pessoaJuridica.razao_social, pessoaJuridica.nome_fantasia,
                 pessoaJuridica.inscricao_estadual, pessoaJuridica.ramo_atividade, pessoaJuridica.data_fundacao,
-                pessoaJuridica.capital_social_num, pessoaJuridica.telefone, pessoaJuridica.conta_bancaria,
+                pessoaJuridica.capital_social, pessoaJuridica.telefone, pessoaJuridica.conta_bancaria,
                 pessoaJuridica.email, pessoaJuridica.site, pessoaJuridica.contador,
                 pessoaJuridica.telefone_contador, pessoaJuridica.logradouro, pessoaJuridica.numero_complemento,
                 pessoaJuridica.bairro, pessoaJuridica.cidade, pessoaJuridica.uf

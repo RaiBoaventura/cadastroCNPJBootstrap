@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRUD Empresa</title>
+    <title>CRUD Empresa Detalhada</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
-
+    <script src="JS/crud.js"></script>
 </head>
 <body>
     <div class="container my-4">
-        <h1 class="text-center">CRUD Empresa</h1>
-        <p class="text-muted text-center">Gerencie os registros de Empresa, Sócios e Referências.</p>
+        <h1 class="text-center">CRUD Empresa Detalhada</h1>
+        <p class="text-muted text-center">Gerencie os registros de Empresa, Sócios e Referências Bancárias/Comerciais.</p>
 
         <!-- Empresa Section -->
         <div class="my-5">
@@ -23,6 +23,9 @@
                         <th>CNPJ</th>
                         <th>Razão Social</th>
                         <th>Telefone</th>
+                        <th>Referências Bancárias</th>
+                        <th>Referências Comerciais</th>
+                        <th>Sócios</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -54,6 +57,18 @@
                                 <label for="telefone" class="form-label">Telefone</label>
                                 <input type="text" id="telefone" class="form-control">
                             </div>
+                            <div class="mb-3">
+                                <label for="referencias_bancarias" class="form-label">Referências Bancárias</label>
+                                <textarea id="referencias_bancarias" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="referencias_comerciais" class="form-label">Referências Comerciais</label>
+                                <textarea id="referencias_comerciais" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="socios" class="form-label">Sócios</label>
+                                <textarea id="socios" class="form-control" rows="3"></textarea>
+                            </div>
                             <input type="hidden" id="empresaId">
                         </form>
                     </div>
@@ -66,6 +81,6 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="JS/crud.js"></script>
+    <script src="crud.js"></script>
 </body>
 </html>

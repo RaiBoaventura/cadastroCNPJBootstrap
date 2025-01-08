@@ -7,44 +7,52 @@ document.addEventListener("DOMContentLoaded", () => {
     const cnpjInput = document.getElementById("cnpj");
     const razaoSocialInput = document.getElementById("razao_social");
     const telefoneInput = document.getElementById("telefone");
+    const referenciasBancariasInput = document.getElementById("referencias_bancarias");
+    const referenciasComerciaisInput = document.getElementById("referencias_comerciais");
+    const sociosInput = document.getElementById("socios");
     const empresaIdInput = document.getElementById("empresaId");
 
     // Carregar empresas
-async function carregarEmpresas() {
-    try {
-        const response = await fetch("http://localhost:3000/empresa"); // Ajustado para o endpoint correto
-        if (!response.ok) {
-            throw new Error(`Erro ao carregar empresas: ${response.statusText}`);
+    async function carregarEmpresas() {
+        try {
+            const response = await fetch("http://localhost:3000/vw_empresa_detalhada"); // Endpoint da view
+            if (!response.ok) {
+                throw new Error(`Erro ao carregar empresas: ${response.statusText}`);
+            }
+
+            const empresas = await response.json();
+
+            empresaTableBody.innerHTML = "";
+            empresas.forEach((empresa) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${empresa.id_empresa}</td>
+                    <td>${empresa.cnpj}</td>
+                    <td>${empresa.razao_social}</td>
+                    <td>${empresa.empresa_telefone || "-"}</td>
+                    <td>${empresa.referencias_bancarias || "-"}</td>
+                    <td>${empresa.referencias_comerciais || "-"}</td>
+                    <td>${empresa.socios || "-"}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm me-2" onclick='editarEmpresa(${JSON.stringify(empresa)})'>Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="deletarEmpresa(${empresa.id_empresa})">Excluir</button>
+                    </td>
+                `;
+                empresaTableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error("Erro ao carregar empresas:", error);
         }
-
-        const empresas = await response.json();
-
-        empresaTableBody.innerHTML = "";
-        empresas.forEach((empresa) => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${empresa.id}</td>
-                <td>${empresa.cnpj}</td>
-                <td>${empresa.razao_social}</td>
-                <td>${empresa.telefone || "-"}</td>
-                <td>
-                    <button class="btn btn-warning btn-sm me-2" onclick='editarEmpresa(${JSON.stringify(empresa)})'>Editar</button>
-                    <button class="btn btn-danger btn-sm" onclick="deletarEmpresa(${empresa.id})">Excluir</button>
-                </td>
-            `;
-            empresaTableBody.appendChild(row);
-        });
-    } catch (error) {
-        console.error("Erro ao carregar empresas:", error);
     }
-}
-
 
     // Adicionar Empresa
     addEmpresaBtn.addEventListener("click", () => {
         cnpjInput.value = "";
         razaoSocialInput.value = "";
         telefoneInput.value = "";
+        referenciasBancariasInput.value = "";
+        referenciasComerciaisInput.value = "";
+        sociosInput.value = "";
         empresaIdInput.value = "";
         empresaModal.show();
     });
@@ -56,24 +64,20 @@ async function carregarEmpresas() {
             cnpj: cnpjInput.value,
             razao_social: razaoSocialInput.value,
             telefone: telefoneInput.value,
+            referencias_bancarias: referenciasBancariasInput.value,
+            referencias_comerciais: referenciasComerciaisInput.value,
+            socios: sociosInput.value,
         };
 
         try {
-            if (id) {
-                // Atualizar
-                await fetch(`http://localhost:3000/empresa/${id}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(empresa),
-                });
-            } else {
-                // Adicionar
-                await fetch("http://localhost:3000/empresa", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(empresa),
-                });
-            }
+            const url = id ? `http://localhost:3000/vw_empresa_detalhada/${id}` : "http://localhost:3000/vw_empresa_detalhada";
+            const method = id ? "PUT" : "POST";
+
+            await fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(empresa),
+            });
 
             empresaModal.hide();
             carregarEmpresas();
@@ -86,7 +90,7 @@ async function carregarEmpresas() {
     window.deletarEmpresa = async (id) => {
         if (confirm("Deseja realmente excluir esta empresa?")) {
             try {
-                await fetch(`http://localhost:3000/empresa/${id}`, { method: "DELETE" });
+                await fetch(`http://localhost:3000/vw_empresa_detalhada/${id}`, { method: "DELETE" });
                 carregarEmpresas();
             } catch (error) {
                 console.error("Erro ao excluir empresa:", error);
@@ -96,10 +100,13 @@ async function carregarEmpresas() {
 
     // Editar Empresa
     window.editarEmpresa = (empresa) => {
-        empresaIdInput.value = empresa.id;
+        empresaIdInput.value = empresa.id_empresa;
         cnpjInput.value = empresa.cnpj;
         razaoSocialInput.value = empresa.razao_social;
-        telefoneInput.value = empresa.telefone || "";
+        telefoneInput.value = empresa.empresa_telefone || "";
+        referenciasBancariasInput.value = empresa.referencias_bancarias || "";
+        referenciasComerciaisInput.value = empresa.referencias_comerciais || "";
+        sociosInput.value = empresa.socios || "";
         empresaModal.show();
     };
 

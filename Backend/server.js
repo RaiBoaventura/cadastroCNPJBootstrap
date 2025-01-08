@@ -24,6 +24,10 @@ pool.connect((err) => {
         console.log('Conectado ao PostgreSQL com sucesso!');
     }
 });
+const path = require('path');
+
+// Servir arquivos estáticos da pasta 'Frontend'
+app.use(express.static(path.join(__dirname, 'Frontend')));
 
 // Endpoint para buscar dados do CNPJ da ReceitaWS
 app.get('/cnpj/:cnpj', async (req, res) => {
@@ -76,6 +80,17 @@ app.get('/empresa', async (req, res) => {
     } catch (error) {
         console.error('Erro ao listar empresas:', error);
         res.status(500).json({ message: 'Erro ao listar empresas.' });
+    }
+});
+// Endpoint para listar dados da view 'vw_empresa_detalhada'
+app.get('/vw_empresa_detalhada', async (req, res) => {
+    try {
+        const query = `SELECT * FROM vw_empresa_detalhada ORDER BY id_empresa ASC`;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Erro ao listar dados da view:', error);
+        res.status(500).json({ message: 'Erro ao listar dados da view.' });
     }
 });
 
@@ -180,7 +195,7 @@ app.post('/salvar-tudo', async (req, res) => {
             const pessoaJuridicaQuery = `
                 INSERT INTO empresa (
                     cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
-                    data_fundacao, capital_social, telefone, conta_bancaria, email, site,
+                    data_fundacao, capital_social, telefones, conta_bancaria, email, site,
                     contador, telefone_contador, logradouro, numero_complemento, bairro, cidade, uf
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
                 RETURNING id;
@@ -188,7 +203,7 @@ app.post('/salvar-tudo', async (req, res) => {
             const pessoaJuridicaValues = [
                 pessoaJuridica.cnpj, pessoaJuridica.razao_social, pessoaJuridica.nome_fantasia,
                 pessoaJuridica.inscricao_estadual, pessoaJuridica.ramo_atividade, pessoaJuridica.data_fundacao,
-                pessoaJuridica.capital_social, pessoaJuridica.telefone, pessoaJuridica.conta_bancaria,
+                pessoaJuridica.capital_social, pessoaJuridica.telefones, pessoaJuridica.conta_bancaria,
                 pessoaJuridica.email, pessoaJuridica.site, pessoaJuridica.contador,
                 pessoaJuridica.telefone_contador, pessoaJuridica.logradouro, pessoaJuridica.numero_complemento,
                 pessoaJuridica.bairro, pessoaJuridica.cidade, pessoaJuridica.uf

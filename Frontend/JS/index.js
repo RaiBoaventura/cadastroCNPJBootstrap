@@ -280,7 +280,7 @@ telefoneContadorInput.addEventListener("blur", () => {
         // Remove todos os caracteres não numéricos
         const rawValue = capitalSocialInput.value.replace(/[^\d]/g, '');
     
-
+        const numericValue = rawValue ? parseFloat(rawValue) / 100 : 0;
     
         // Formata o valor como moeda brasileira
         capitalSocialInput.value = numericValue.toLocaleString('pt-BR', {

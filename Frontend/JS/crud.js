@@ -19,20 +19,40 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!response.ok) {
                 throw new Error(`Erro ao carregar empresas: ${response.statusText}`);
             }
-
+    
             const empresas = await response.json();
-
+    
             empresaTableBody.innerHTML = "";
             empresas.forEach((empresa) => {
+                // Transformar campos JSON em texto legível
+                const referenciasBancarias = empresa.referencias_bancarias
+                    ? empresa.referencias_bancarias.map(ref => `
+                        Banco: ${ref.banco || '-'}, Agência: ${ref.agencia || '-'}, Conta: ${ref.conta || '-'}, 
+                        Gerente: ${ref.gerente || '-'}, Telefone: ${ref.telefone || '-'}, Abertura: ${ref.data_abertura || '-'}`).join('<br>')
+                    : "-";
+    
+                const referenciasComerciais = empresa.referencias_comerciais
+                    ? empresa.referencias_comerciais.map(ref => `
+                        Fornecedor: ${ref.fornecedor || '-'}, Telefone: ${ref.telefone || '-'}, 
+                        Contato: ${ref.contato || '-'}, Ramo: ${ref.ramo_atividade || '-'}`).join('<br>')
+                    : "-";
+    
+                const socios = empresa.socios
+                    ? empresa.socios.map(socio => `
+                        Nome: ${socio.nome || '-'}, Endereço: ${socio.endereco || '-'}, Bairro: ${socio.bairro || '-'}, 
+                        Cidade: ${socio.cidade || '-'}, UF: ${socio.uf || '-'}, Telefone: ${socio.telefone || '-'}, 
+                        Email: ${socio.email || '-'}`).join('<br>')
+                    : "-";
+    
                 const row = document.createElement("tr");
                 row.innerHTML = `
                     <td>${empresa.id_empresa}</td>
                     <td>${empresa.cnpj}</td>
                     <td>${empresa.razao_social}</td>
                     <td>${empresa.empresa_telefone || "-"}</td>
-                    <td>${empresa.referencias_bancarias || "-"}</td>
-                    <td>${empresa.referencias_comerciais || "-"}</td>
-                    <td>${empresa.socios || "-"}</td>
+                    <td>${referenciasBancarias}</td>
+                    <td>${referenciasComerciais}</td>
+                    <td>${socios}</td>
                     <td>
                         <button class="btn btn-warning btn-sm me-2" onclick='editarEmpresa(${JSON.stringify(empresa)})'>Editar</button>
                         <button class="btn btn-danger btn-sm" onclick="deletarEmpresa(${empresa.id_empresa})">Excluir</button>
@@ -44,6 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Erro ao carregar empresas:", error);
         }
     }
+    
 
     // Adicionar Empresa
     addEmpresaBtn.addEventListener("click", () => {

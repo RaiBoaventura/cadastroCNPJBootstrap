@@ -128,27 +128,131 @@ app.post('/empresa', async (req, res) => {
 // Atualizar uma empresa pelo ID
 app.put('/empresa/:id', async (req, res) => {
     const { id } = req.params;
-    const { cnpj, razao_social, telefone } = req.body;
+    const {
+        cnpj,
+        razao_social,
+        telefone,
+        referencias_bancarias,
+        referencias_comerciais,
+        socios
+    } = req.body;
+
+    const client = await pool.connect();
 
     try {
-        const query = `
+        await client.query('BEGIN'); // Iniciar transação
+
+        // Atualizar os campos simples da empresa
+        const empresaQuery = `
             UPDATE empresa
             SET cnpj = $1, razao_social = $2, telefone = $3
             WHERE id = $4
         `;
-        const values = [cnpj, razao_social, telefone, id];
-        const result = await pool.query(query, values);
+        const empresaValues = [cnpj, razao_social, telefone, id];
+        await client.query(empresaQuery, empresaValues);
 
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Empresa não encontrada.' });
+        // Excluir dados existentes para referências bancárias
+        await client.query(`DELETE FROM referenciasbancarias WHERE id_empresa = $1`, [id]);
+
+        // Inserir novas referências bancárias
+        if (referencias_bancarias && referencias_bancarias.length > 0) {
+            for (const ref of referencias_bancarias) {
+                const query = `
+                    INSERT INTO referenciasbancarias (
+                        id_empresa, banco, agencia, conta, gerente, telefone, data_abertura
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                `;
+                const values = [
+                    id, ref.banco, ref.agencia, ref.conta, ref.gerente, ref.telefone, ref.data_abertura
+                ];
+                await client.query(query, values);
+            }
         }
 
+        // Excluir dados existentes para referências comerciais
+        await client.query(`DELETE FROM referenciascomerciais WHERE id_empresa = $1`, [id]);
+
+        // Inserir novas referências comerciais
+        if (referencias_comerciais && referencias_comerciais.length > 0) {
+            for (const ref of referencias_comerciais) {
+                const query = `
+                    INSERT INTO referenciascomerciais (
+                        id_empresa, fornecedor, telefone, ramo_atividade, contato
+                    ) VALUES ($1, $2, $3, $4, $5)
+                `;
+                const values = [
+                    id, ref.fornecedor, ref.telefone, ref.ramo_atividade, ref.contato
+                ];
+                await client.query(query, values);
+            }
+        }
+
+        // Excluir dados existentes para sócios
+        await client.query(`DELETE FROM socios WHERE id_empresa = $1`, [id]);
+        app.delete('/empresa/:id', async (req, res) => {
+            const { id } = req.params;
+        
+            const client = await pool.connect();
+        
+            try {
+                await client.query('BEGIN'); // Iniciar transação
+        
+                // Excluir dados relacionados: referências bancárias
+                await client.query(`DELETE FROM referenciasbancarias WHERE id_empresa = $1`, [id]);
+        
+                // Excluir dados relacionados: referências comerciais
+                await client.query(`DELETE FROM referenciascomerciais WHERE id_empresa = $1`, [id]);
+        
+                // Excluir dados relacionados: sócios
+                await client.query(`DELETE FROM socios WHERE id_empresa = $1`, [id]);
+        
+                // Excluir a empresa
+                const result = await client.query(`DELETE FROM empresa WHERE id = $1`, [id]);
+        
+                if (result.rowCount === 0) {
+                    await client.query('ROLLBACK'); // Reverter em caso de empresa inexistente
+                    return res.status(404).json({ message: 'Empresa não encontrada.' });
+                }
+        
+                await client.query('COMMIT'); // Confirmar transação
+                res.json({ message: 'Empresa excluída com sucesso!' });
+            } catch (error) {
+                await client.query('ROLLBACK'); // Reverter em caso de erro
+                console.error('Erro ao excluir empresa:', error);
+                res.status(500).json({ message: 'Erro ao excluir empresa.', error: error.message });
+            } finally {
+                client.release();
+            }
+        });
+        
+        // Inserir novos sócios
+        if (socios && socios.length > 0) {
+            for (const socio of socios) {
+                const query = `
+                    INSERT INTO socios (
+                        id_empresa, nome, endereco, bairro, cidade, uf, telefone, email
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                `;
+                const values = [
+                    id, socio.nome, socio.endereco, socio.bairro, socio.cidade,
+                    socio.uf, socio.telefone, socio.email
+                ];
+                await client.query(query, values);
+            }
+        }
+
+        await client.query('COMMIT'); // Confirmar transação
         res.json({ message: 'Empresa atualizada com sucesso!' });
     } catch (error) {
+        await client.query('ROLLBACK'); // Reverter em caso de erro
         console.error('Erro ao atualizar empresa:', error);
         res.status(500).json({ message: 'Erro ao atualizar empresa.', error: error.message });
+    } finally {
+        client.release();
     }
 });
+
+
 
 // Deletar uma empresa pelo ID
 app.delete('/empresa/:id', async (req, res) => {
@@ -166,6 +270,133 @@ app.delete('/empresa/:id', async (req, res) => {
     } catch (error) {
         console.error('Erro ao deletar empresa:', error);
         res.status(500).json({ message: 'Erro ao deletar empresa.', error: error.message });
+    }
+});
+// Criar ou atualizar Pessoa Jurídica
+app.post('/pessoa-juridica', async (req, res) => {
+    const { cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
+        data_fundacao, capital_social, telefones, email, site, contador, telefone_contador,
+        logradouro, numero_complemento, bairro, cidade, uf } = req.body;
+
+    try {
+        const query = `
+            INSERT INTO empresa (
+                cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
+                data_fundacao, capital_social, telefone, email, site, contador,
+                telefone_contador, logradouro, numero_complemento, bairro, cidade, uf
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+            ON CONFLICT (cnpj) DO UPDATE SET
+                razao_social = EXCLUDED.razao_social,
+                nome_fantasia = EXCLUDED.nome_fantasia,
+                inscricao_estadual = EXCLUDED.inscricao_estadual,
+                ramo_atividade = EXCLUDED.ramo_atividade,
+                data_fundacao = EXCLUDED.data_fundacao,
+                capital_social = EXCLUDED.capital_social,
+                telefone = EXCLUDED.telefone,
+                email = EXCLUDED.email,
+                site = EXCLUDED.site,
+                contador = EXCLUDED.contador,
+                telefone_contador = EXCLUDED.telefone_contador,
+                logradouro = EXCLUDED.logradouro,
+                numero_complemento = EXCLUDED.numero_complemento,
+                bairro = EXCLUDED.bairro,
+                cidade = EXCLUDED.cidade,
+                uf = EXCLUDED.uf
+            RETURNING id;
+        `;
+        const values = [
+            cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
+            data_fundacao, capital_social, telefones, email, site, contador,
+            telefone_contador, logradouro, numero_complemento, bairro, cidade, uf
+        ];
+        const result = await pool.query(query, values);
+        res.status(201).json({ message: 'Pessoa Jurídica salva com sucesso.', id: result.rows[0].id });
+    } catch (error) {
+        console.error('Erro ao salvar Pessoa Jurídica:', error);
+        res.status(500).json({ message: 'Erro ao salvar Pessoa Jurídica.', error: error.message });
+    }
+});
+// Criar ou atualizar sócios
+app.post('/socios', async (req, res) => {
+    const { id_empresa, socios } = req.body;
+
+    try {
+        for (const socio of socios) {
+            const query = `
+                INSERT INTO socios (
+                    id_empresa, nome, endereco, bairro, cidade, uf, telefone, email
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                ON CONFLICT (id_empresa, nome) DO UPDATE SET
+                    endereco = EXCLUDED.endereco,
+                    bairro = EXCLUDED.bairro,
+                    cidade = EXCLUDED.cidade,
+                    uf = EXCLUDED.uf,
+                    telefone = EXCLUDED.telefone,
+                    email = EXCLUDED.email;
+            `;
+            const values = [
+                id_empresa, socio.nome, socio.endereco, socio.bairro, socio.cidade,
+                socio.uf, socio.telefone, socio.email
+            ];
+            await pool.query(query, values);
+        }
+        res.status(200).json({ message: 'Sócios salvos com sucesso.' });
+    } catch (error) {
+        console.error('Erro ao salvar sócios:', error);
+        res.status(500).json({ message: 'Erro ao salvar sócios.', error: error.message });
+    }
+});
+// Criar ou atualizar referências comerciais
+app.post('/referenciascomerciais', async (req, res) => {
+    const { id_empresa, referencias } = req.body;
+
+    try {
+        for (const ref of referencias) {
+            const query = `
+                INSERT INTO referenciascomerciais (
+                    id_empresa, fornecedor, telefone, ramo_atividade, contato
+                ) VALUES ($1, $2, $3, $4, $5)
+                ON CONFLICT (id_empresa, fornecedor) DO UPDATE SET
+                    telefone = EXCLUDED.telefone,
+                    ramo_atividade = EXCLUDED.ramo_atividade,
+                    contato = EXCLUDED.contato;
+            `;
+            const values = [
+                id_empresa, ref.fornecedor, ref.telefone, ref.ramo_atividade, ref.contato
+            ];
+            await pool.query(query, values);
+        }
+        res.status(200).json({ message: 'Referências comerciais salvas com sucesso.' });
+    } catch (error) {
+        console.error('Erro ao salvar referências comerciais:', error);
+        res.status(500).json({ message: 'Erro ao salvar referências comerciais.', error: error.message });
+    }
+});
+// Criar ou atualizar referências bancárias
+app.post('/bancos', async (req, res) => {
+    const { id_empresa, bancos } = req.body;
+
+    try {
+        for (const banco of bancos) {
+            const query = `
+                INSERT INTO referenciasbancarias (
+                    id_empresa, banco, agencia, conta, gerente, telefone, data_abertura
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                ON CONFLICT (id_empresa, banco, agencia) DO UPDATE SET
+                    conta = EXCLUDED.conta,
+                    gerente = EXCLUDED.gerente,
+                    telefone = EXCLUDED.telefone,
+                    data_abertura = EXCLUDED.data_abertura;
+            `;
+            const values = [
+                id_empresa, banco.banco, banco.agencia, banco.conta, banco.gerente, banco.telefone, banco.data_abertura
+            ];
+            await pool.query(query, values);
+        }
+        res.status(200).json({ message: 'Referências bancárias salvas com sucesso.' });
+    } catch (error) {
+        console.error('Erro ao salvar referências bancárias:', error);
+        res.status(500).json({ message: 'Erro ao salvar referências bancárias.', error: error.message });
     }
 });
 
@@ -271,7 +502,40 @@ app.post('/salvar-tudo', async (req, res) => {
             ];
             await client.query(bankQuery, bankValues);
         }
-
+        app.get('/vw_empresa_detalhada', async (req, res) => {
+            try {
+                const query = `SELECT * FROM vw_empresa_detalhada ORDER BY id_empresa ASC`;
+                const result = await pool.query(query);
+                res.json(result.rows); // Certifique-se de que os dados JSON são retornados corretamente
+            } catch (error) {
+                console.error('Erro ao listar dados da view:', error);
+                res.status(500).json({ message: 'Erro ao listar dados da view.' });
+            }
+        });
+        app.put('/empresa/:id', async (req, res) => {
+            const { id } = req.params;
+            const { cnpj, razao_social, telefone } = req.body;
+        
+            try {
+                const query = `
+                    UPDATE empresa
+                    SET cnpj = $1, razao_social = $2, telefone = $3
+                    WHERE id = $4
+                `;
+                const values = [cnpj, razao_social, telefone, id];
+                const result = await pool.query(query, values);
+        
+                if (result.rowCount === 0) {
+                    return res.status(404).json({ message: 'Empresa não encontrada.' });
+                }
+        
+                res.json({ message: 'Empresa atualizada com sucesso!' });
+            } catch (error) {
+                console.error('Erro ao atualizar empresa:', error);
+                res.status(500).json({ message: 'Erro ao atualizar empresa.', error: error.message });
+            }
+        });
+        
         // Confirma a transação
         await client.query('COMMIT');
         res.json({ message: 'Dados salvos com sucesso!' });
@@ -284,7 +548,6 @@ app.post('/salvar-tudo', async (req, res) => {
         client.release();
     }
 });
-
 
 // Servidor rodando na porta 3000
 app.listen(3000, () => {

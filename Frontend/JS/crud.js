@@ -85,51 +85,82 @@ document.addEventListener("DOMContentLoaded", () => {
             cnpj: cnpjInput.value,
             razao_social: razaoSocialInput.value,
             telefone: telefoneInput.value,
-            referencias_bancarias: referenciasBancariasInput.value,
-            referencias_comerciais: referenciasComerciaisInput.value,
-            socios: sociosInput.value,
+            referencias_bancarias: referenciasBancariasInput.value
+                ? JSON.parse(referenciasBancariasInput.value)
+                : [],
+            referencias_comerciais: referenciasComerciaisInput.value
+                ? JSON.parse(referenciasComerciaisInput.value)
+                : [],
+            socios: sociosInput.value
+                ? JSON.parse(sociosInput.value)
+                : [],
         };
-
+    
         try {
-            const url = id ? `http://localhost:3000/vw_empresa_detalhada/${id}` : "http://localhost:3000/vw_empresa_detalhada";
+            const url = id ? `http://localhost:3000/empresa/${id}` : "http://localhost:3000/empresa";
             const method = id ? "PUT" : "POST";
-
-            await fetch(url, {
+    
+            const response = await fetch(url, {
                 method: method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(empresa),
             });
-
+    
+            if (!response.ok) {
+                throw new Error("Erro ao salvar empresa");
+            }
+    
+            alert("Empresa salva com sucesso!");
             empresaModal.hide();
             carregarEmpresas();
         } catch (error) {
             console.error("Erro ao salvar empresa:", error);
+            alert("Erro ao salvar empresa. Verifique o console para mais detalhes.");
         }
     });
+    
+    
 
     // Deletar Empresa
     window.deletarEmpresa = async (id) => {
         if (confirm("Deseja realmente excluir esta empresa?")) {
             try {
-                await fetch(`http://localhost:3000/vw_empresa_detalhada/${id}`, { method: "DELETE" });
-                carregarEmpresas();
+                const response = await fetch(`http://localhost:3000/empresa/${id}`, { method: "DELETE" });
+                if (!response.ok) {
+                    throw new Error("Erro ao excluir empresa");
+                }
+                alert("Empresa excluída com sucesso!");
+                carregarEmpresas(); // Recarregar a lista de empresas
             } catch (error) {
                 console.error("Erro ao excluir empresa:", error);
+                alert("Erro ao excluir empresa. Verifique o console para mais detalhes.");
             }
         }
     };
+    
 
-    // Editar Empresa
     window.editarEmpresa = (empresa) => {
+        // Campos simples
         empresaIdInput.value = empresa.id_empresa;
         cnpjInput.value = empresa.cnpj;
         razaoSocialInput.value = empresa.razao_social;
         telefoneInput.value = empresa.empresa_telefone || "";
-        referenciasBancariasInput.value = empresa.referencias_bancarias || "";
-        referenciasComerciaisInput.value = empresa.referencias_comerciais || "";
-        sociosInput.value = empresa.socios || "";
+    
+        // Transformar campos JSON em texto legível para edição
+        referenciasBancariasInput.value = empresa.referencias_bancarias
+            ? JSON.stringify(empresa.referencias_bancarias, null, 2)
+            : "";
+        referenciasComerciaisInput.value = empresa.referencias_comerciais
+            ? JSON.stringify(empresa.referencias_comerciais, null, 2)
+            : "";
+        sociosInput.value = empresa.socios
+            ? JSON.stringify(empresa.socios, null, 2)
+            : "";
+    
+        // Exibir o modal
         empresaModal.show();
     };
+    
 
     // Inicializar
     carregarEmpresas();

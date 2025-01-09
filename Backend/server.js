@@ -191,19 +191,19 @@ app.post('/salvar-tudo', async (req, res) => {
         if (existing.rows.length > 0) {
             pessoaJuridicaId = existing.rows[0].id; // Reutilizar ID se a empresa já existir
         } else {
-            // Inserir nova empresa
+            // Inserir nova empresa (sem a coluna 'telefones')
             const pessoaJuridicaQuery = `
                 INSERT INTO empresa (
                     cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
-                    data_fundacao, capital_social, telefones, conta_bancaria, email, site,
+                    data_fundacao, capital_social_, conta_bancaria, email, site,
                     contador, telefone_contador, logradouro, numero_complemento, bairro, cidade, uf
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
                 RETURNING id;
             `;
             const pessoaJuridicaValues = [
                 pessoaJuridica.cnpj, pessoaJuridica.razao_social, pessoaJuridica.nome_fantasia,
                 pessoaJuridica.inscricao_estadual, pessoaJuridica.ramo_atividade, pessoaJuridica.data_fundacao,
-                pessoaJuridica.capital_social, pessoaJuridica.telefones, pessoaJuridica.conta_bancaria,
+                pessoaJuridica.capital_social, pessoaJuridica.conta_bancaria,
                 pessoaJuridica.email, pessoaJuridica.site, pessoaJuridica.contador,
                 pessoaJuridica.telefone_contador, pessoaJuridica.logradouro, pessoaJuridica.numero_complemento,
                 pessoaJuridica.bairro, pessoaJuridica.cidade, pessoaJuridica.uf
@@ -234,7 +234,6 @@ app.post('/salvar-tudo', async (req, res) => {
             ];
             await client.query(sociosQuery, sociosValues);
         }
-        
 
         // Inserir ou atualizar referências comerciais
         for (const ref of commercialRefs) {
@@ -285,6 +284,7 @@ app.post('/salvar-tudo', async (req, res) => {
         client.release();
     }
 });
+
 
 // Servidor rodando na porta 3000
 app.listen(3000, () => {

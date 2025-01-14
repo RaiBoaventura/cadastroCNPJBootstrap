@@ -426,7 +426,7 @@ app.post('/salvar-tudo', async (req, res) => {
             const pessoaJuridicaQuery = `
                 INSERT INTO empresa (
                     cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
-                    data_fundacao, capital_social_, conta_bancaria, email, site,
+                    data_fundacao, capital_social, conta_bancaria, email, site,
                     contador, telefone_contador, logradouro, numero_complemento, bairro, cidade, uf
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
                 RETURNING id;

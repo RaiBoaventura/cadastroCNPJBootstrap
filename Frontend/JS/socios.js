@@ -1,3 +1,4 @@
+
 document.addEventListener("DOMContentLoaded", () => {
     const socioContainer = document.getElementById("socio-container");
     const addSocioBtn = document.getElementById("add-socio-btn");
@@ -68,7 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     bairroInput.value = data.bairro || '';
                     cidadeInput.value = data.localidade || '';
                     ufInput.value = data.uf || '';
-    
                     errorMessage.style.display = "none";
                     cepInput.classList.remove("is-invalid");
                     cepInput.classList.add("is-valid");

@@ -27,6 +27,8 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     }
+
+    
     function adicionarEventoCEP(index) {
         const cepInput = document.getElementById(`cep-socio-${index}`);
         const enderecoInput = document.getElementById(`endereco-socio-${index}`);

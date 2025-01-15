@@ -128,129 +128,83 @@ app.post('/empresa', async (req, res) => {
 // Atualizar uma empresa pelo ID
 app.put('/empresa/:id', async (req, res) => {
     const { id } = req.params;
-    const {
-        cnpj,
-        razao_social,
-        telefone,
-        referencias_bancarias,
-        referencias_comerciais,
-        socios
-    } = req.body;
+    const { cnpj, razao_social, telefone, referencias_bancarias, referencias_comerciais, socios } = req.body;
 
     const client = await pool.connect();
-
     try {
-        await client.query('BEGIN'); // Iniciar transação
+        await client.query('BEGIN');
 
-        // Atualizar os campos simples da empresa
-        const empresaQuery = `
+        // Atualizar os campos da tabela empresa
+        const queryEmpresa = `
             UPDATE empresa
             SET cnpj = $1, razao_social = $2, telefone = $3
             WHERE id = $4
         `;
-        const empresaValues = [cnpj, razao_social, telefone, id];
-        await client.query(empresaQuery, empresaValues);
+        await client.query(queryEmpresa, [cnpj, razao_social, telefone, id]);
 
-        // Excluir dados existentes para referências bancárias
-        await client.query(`DELETE FROM referenciasbancarias WHERE id_empresa = $1`, [id]);
-
-        // Inserir novas referências bancárias
+        // Atualizar referências bancárias
         if (referencias_bancarias && referencias_bancarias.length > 0) {
             for (const ref of referencias_bancarias) {
                 const query = `
                     INSERT INTO referenciasbancarias (
                         id_empresa, banco, agencia, conta, gerente, telefone, data_abertura
                     ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                    ON CONFLICT (id_empresa, banco, agencia) DO UPDATE SET
+                        conta = EXCLUDED.conta,
+                        gerente = EXCLUDED.gerente,
+                        telefone = EXCLUDED.telefone,
+                        data_abertura = EXCLUDED.data_abertura;
                 `;
-                const values = [
-                    id, ref.banco, ref.agencia, ref.conta, ref.gerente, ref.telefone, ref.data_abertura
-                ];
-                await client.query(query, values);
+                await client.query(query, [id, ref.banco, ref.agencia, ref.conta, ref.gerente, ref.telefone, ref.data_abertura]);
             }
         }
 
-        // Excluir dados existentes para referências comerciais
-        await client.query(`DELETE FROM referenciascomerciais WHERE id_empresa = $1`, [id]);
-
-        // Inserir novas referências comerciais
+        // Atualizar referências comerciais
         if (referencias_comerciais && referencias_comerciais.length > 0) {
             for (const ref of referencias_comerciais) {
                 const query = `
                     INSERT INTO referenciascomerciais (
                         id_empresa, fornecedor, telefone, ramo_atividade, contato
                     ) VALUES ($1, $2, $3, $4, $5)
+                    ON CONFLICT (id_empresa, fornecedor) DO UPDATE SET
+                        telefone = EXCLUDED.telefone,
+                        ramo_atividade = EXCLUDED.ramo_atividade,
+                        contato = EXCLUDED.contato;
                 `;
-                const values = [
-                    id, ref.fornecedor, ref.telefone, ref.ramo_atividade, ref.contato
-                ];
-                await client.query(query, values);
+                await client.query(query, [id, ref.fornecedor, ref.telefone, ref.ramo_atividade, ref.contato]);
             }
         }
 
-        // Excluir dados existentes para sócios
-        await client.query(`DELETE FROM socios WHERE id_empresa = $1`, [id]);
-        app.delete('/empresa/:id', async (req, res) => {
-            const { id } = req.params;
-        
-            const client = await pool.connect();
-        
-            try {
-                await client.query('BEGIN'); // Iniciar transação
-        
-                // Excluir dados relacionados: referências bancárias
-                await client.query(`DELETE FROM referenciasbancarias WHERE id_empresa = $1`, [id]);
-        
-                // Excluir dados relacionados: referências comerciais
-                await client.query(`DELETE FROM referenciascomerciais WHERE id_empresa = $1`, [id]);
-        
-                // Excluir dados relacionados: sócios
-                await client.query(`DELETE FROM socios WHERE id_empresa = $1`, [id]);
-        
-                // Excluir a empresa
-                const result = await client.query(`DELETE FROM empresa WHERE id = $1`, [id]);
-        
-                if (result.rowCount === 0) {
-                    await client.query('ROLLBACK'); // Reverter em caso de empresa inexistente
-                    return res.status(404).json({ message: 'Empresa não encontrada.' });
-                }
-        
-                await client.query('COMMIT'); // Confirmar transação
-                res.json({ message: 'Empresa excluída com sucesso!' });
-            } catch (error) {
-                await client.query('ROLLBACK'); // Reverter em caso de erro
-                console.error('Erro ao excluir empresa:', error);
-                res.status(500).json({ message: 'Erro ao excluir empresa.', error: error.message });
-            } finally {
-                client.release();
-            }
-        });
-        
-        // Inserir novos sócios
+        // Atualizar sócios
         if (socios && socios.length > 0) {
             for (const socio of socios) {
                 const query = `
                     INSERT INTO socios (
                         id_empresa, nome, endereco, bairro, cidade, uf, telefone, email
                     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    ON CONFLICT (id_empresa, nome) DO UPDATE SET
+                        endereco = EXCLUDED.endereco,
+                        bairro = EXCLUDED.bairro,
+                        cidade = EXCLUDED.cidade,
+                        uf = EXCLUDED.uf,
+                        telefone = EXCLUDED.telefone,
+                        email = EXCLUDED.email;
                 `;
-                const values = [
-                    id, socio.nome, socio.endereco, socio.bairro, socio.cidade,
-                    socio.uf, socio.telefone, socio.email
-                ];
-                await client.query(query, values);
+                await client.query(query, [id, socio.nome, socio.endereco, socio.bairro, socio.cidade, socio.uf, socio.telefone, socio.email]);
             }
         }
 
-        await client.query('COMMIT'); // Confirmar transação
-        res.json({ message: 'Empresa atualizada com sucesso!' });
+        await client.query('COMMIT');
+        res.status(200).json({ message: 'Empresa atualizada com sucesso!' });
     } catch (error) {
-        await client.query('ROLLBACK'); // Reverter em caso de erro
+        await client.query('ROLLBACK');
         console.error('Erro ao atualizar empresa:', error);
         res.status(500).json({ message: 'Erro ao atualizar empresa.', error: error.message });
     } finally {
         client.release();
     }
 });
+
 
 
 

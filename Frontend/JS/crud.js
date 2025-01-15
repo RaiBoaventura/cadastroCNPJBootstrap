@@ -12,6 +12,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const sociosInput = document.getElementById("socios");
     const empresaIdInput = document.getElementById("empresaId");
 
+    function validarReferenciasUnicas(referencias) {
+        const set = new Set();
+        for (const ref of referencias) {
+            const key = `${ref.banco}-${ref.agencia}`;
+            if (set.has(key)) {
+                return false; // Duplicata encontrada
+            }
+            set.add(key);
+        }
+        return true;
+    }
+    
     // Carregar empresas
     async function carregarEmpresas() {
         try {
@@ -118,6 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Erro ao salvar empresa. Verifique o console para mais detalhes.");
         }
     });
+    
     
     
 

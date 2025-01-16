@@ -155,9 +155,13 @@ app.put('/empresa/:id', async (req, res) => {
                         telefone = EXCLUDED.telefone,
                         data_abertura = EXCLUDED.data_abertura;
                 `;
-                await client.query(query, [id, ref.banco, ref.agencia, ref.conta, ref.gerente, ref.telefone, ref.data_abertura]);
+                const values = [
+                    id, ref.banco, ref.agencia, ref.conta, ref.gerente, ref.telefone, ref.data_abertura
+                ];
+                await client.query(query, values);
             }
         }
+        
 
         // Atualizar referências comerciais
         if (referencias_comerciais && referencias_comerciais.length > 0) {
@@ -171,9 +175,13 @@ app.put('/empresa/:id', async (req, res) => {
                         ramo_atividade = EXCLUDED.ramo_atividade,
                         contato = EXCLUDED.contato;
                 `;
-                await client.query(query, [id, ref.fornecedor, ref.telefone, ref.ramo_atividade, ref.contato]);
+                const values = [
+                    id, ref.fornecedor, ref.telefone, ref.ramo_atividade, ref.contato
+                ];
+                await client.query(query, values);
             }
         }
+        
 
         // Atualizar sócios
         if (socios && socios.length > 0) {
@@ -190,9 +198,13 @@ app.put('/empresa/:id', async (req, res) => {
                         telefone = EXCLUDED.telefone,
                         email = EXCLUDED.email;
                 `;
-                await client.query(query, [id, socio.nome, socio.endereco, socio.bairro, socio.cidade, socio.uf, socio.telefone, socio.email]);
+                const values = [
+                    id, socio.nome, socio.endereco, socio.bairro, socio.cidade, socio.uf, socio.telefone, socio.email
+                ];
+                await client.query(query, values);
             }
         }
+        
 
         await client.query('COMMIT');
         res.status(200).json({ message: 'Empresa atualizada com sucesso!' });

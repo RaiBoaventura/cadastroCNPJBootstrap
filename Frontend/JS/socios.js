@@ -92,6 +92,20 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById(`uf-socio-${index}`).value = '';
     }
     
+// Verificar se há pelo menos um sócio
+function verificarSocios() {
+    const totalSocios = document.querySelectorAll(".card").length;
+
+    if (totalSocios === 0) {
+        alert("É necessário adicionar pelo menos um sócio antes de avançar.");
+        return false; // Impede o avanço
+    }
+
+    return true; // Permite o avanço
+}
+
+
+
     // Atualizar os índices após exclusões ou alterações
     function atualizarIndices() {
         document.querySelectorAll(".card").forEach((card, newIndex) => {
@@ -220,13 +234,19 @@ document.addEventListener("DOMContentLoaded", () => {
         criarCamposSocio(novoSocio, socioIndex++);
     });
 
-    // Validar dados antes de avançar
-    avancarBtn.addEventListener("click", () => {
-        if (!validarSocios()) return;
-        sincronizarDados();
-        localStorage.setItem("sociosData", JSON.stringify(sociosData));
-        window.location.href = "bancos.html";
-    });
+// Integrar a verificação ao evento de avançar
+avancarBtn.addEventListener("click", (event) => {
+    const sociosValidos = verificarSocios() && validarSocios(); // Verifica todos os critérios
+
+    if (!sociosValidos) {
+        event.preventDefault(); // Impede o comportamento padrão do botão
+        return;
+    }
+
+    sincronizarDados();
+    localStorage.setItem("sociosData", JSON.stringify(sociosData));
+    window.location.href = "bancos.html";
+});
 
     // Carregar sócios com base no CNPJ
     async function carregarSocios() {

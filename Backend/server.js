@@ -241,7 +241,7 @@ app.delete('/empresa/:id', async (req, res) => {
 // Criar ou atualizar Pessoa Jurídica
 app.post('/pessoa-juridica', async (req, res) => {
     const { cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
-        data_fundacao, capital_social, telefones, email, site, contador, telefone_contador,
+        data_fundacao, capital_social, telefone, email, site, contador, telefone_contador,
         logradouro, numero_complemento, bairro, cidade, uf } = req.body;
 
     try {
@@ -272,7 +272,7 @@ app.post('/pessoa-juridica', async (req, res) => {
         `;
         const values = [
             cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
-            data_fundacao, capital_social, telefones, email, site, contador,
+            data_fundacao, capital_social, telefone, email, site, contador,
             telefone_contador, logradouro, numero_complemento, bairro, cidade, uf
         ];
         const result = await pool.query(query, values);
@@ -390,21 +390,23 @@ app.post('/salvar-tudo', async (req, res) => {
         } else {
             // Inserir nova empresa (sem a coluna 'telefones')
             const pessoaJuridicaQuery = `
-                INSERT INTO empresa (
-                    cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
-                    data_fundacao, capital_social, conta_bancaria, email, site,
-                    contador, telefone_contador, logradouro, numero_complemento, bairro, cidade, uf
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-                RETURNING id;
-            `;
-            const pessoaJuridicaValues = [
-                pessoaJuridica.cnpj, pessoaJuridica.razao_social, pessoaJuridica.nome_fantasia,
-                pessoaJuridica.inscricao_estadual, pessoaJuridica.ramo_atividade, pessoaJuridica.data_fundacao,
-                pessoaJuridica.capital_social, pessoaJuridica.conta_bancaria,
-                pessoaJuridica.email, pessoaJuridica.site, pessoaJuridica.contador,
-                pessoaJuridica.telefone_contador, pessoaJuridica.logradouro, pessoaJuridica.numero_complemento,
-                pessoaJuridica.bairro, pessoaJuridica.cidade, pessoaJuridica.uf
-            ];
+            INSERT INTO empresa (
+                cnpj, razao_social, nome_fantasia, inscricao_estadual, ramo_atividade,
+                data_fundacao, capital_social, conta_bancaria, email, site,
+                contador, telefone, telefone_contador, logradouro, numero_complemento, bairro, cidade, uf
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+            RETURNING id;
+        `;
+        
+        const pessoaJuridicaValues = [
+            pessoaJuridica.cnpj, pessoaJuridica.razao_social, pessoaJuridica.nome_fantasia,
+            pessoaJuridica.inscricao_estadual, pessoaJuridica.ramo_atividade, pessoaJuridica.data_fundacao,
+            pessoaJuridica.capital_social, pessoaJuridica.conta_bancaria, pessoaJuridica.email,
+            pessoaJuridica.site, pessoaJuridica.contador, pessoaJuridica.telefone,
+            pessoaJuridica.telefone_contador, pessoaJuridica.logradouro, pessoaJuridica.numero_complemento,
+            pessoaJuridica.bairro, pessoaJuridica.cidade, pessoaJuridica.uf
+        ];
+        
             const pessoaJuridicaResult = await client.query(pessoaJuridicaQuery, pessoaJuridicaValues);
             pessoaJuridicaId = pessoaJuridicaResult.rows[0].id;
         }

@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const emailError = document.getElementById("email-error");
     const dataFundacaoInput = document.getElementById("data_fundacao");
     const dataFundacaoError = document.getElementById("data-fundacao-error");
-    const telefoneInput = document.getElementById("telefones");
+    const telefoneInput = document.getElementById("telefone");
     const telefoneError = document.getElementById("telefone-error");
     const telefoneContadorError = document.getElementById("telefone-contador-error");
     const telefoneContadorInput = document.getElementById("telefone_contador");
@@ -208,7 +208,7 @@ telefoneContadorInput.addEventListener("blur", () => {
         document.getElementById("bairro").value = data.bairro || '';
         document.getElementById("cidade").value = data.municipio || '';
         document.getElementById("uf").value = data.uf || '';
-        document.getElementById("telefones").value = data.ddd_telefone_1 || '';
+        document.getElementById("telefone").value = data.ddd_telefone_1 || '';
         document.getElementById("email").value = data.email || '';
     }
 
@@ -317,7 +317,7 @@ telefoneContadorInput.addEventListener("blur", () => {
             ramo_atividade: document.getElementById("ramo_atividade").value,
             data_fundacao: document.getElementById("data_fundacao").value,
             capital_social: capitalSocialNumInput.value,
-            telefones: document.getElementById("telefones").value,
+            telefone: document.getElementById("telefone").value,
             email: document.getElementById("email").value,
             site: document.getElementById("site").value,
             contador: document.getElementById("contador").value,

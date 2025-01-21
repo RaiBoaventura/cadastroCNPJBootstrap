@@ -356,34 +356,34 @@ telefoneContadorInput.addEventListener("blur", () => {
         capitalSocialNumInput.value = numericValue.toFixed(2);
     });
     
-    function desformatarValorMonetario(valor) {
-        // Remove o símbolo de moeda, pontos e espaços
-        return parseFloat(valor.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-    }
-capitalSocialInput.addEventListener("blur", () => {
-    // Obtem o valor desformatado do campo formatado
-    const valorDesformatado = desformatarValorMonetario(capitalSocialInput.value);
+        function desformatarValorMonetario(valor) {
+            // Remove o símbolo de moeda, pontos e espaços
+            return parseFloat(valor.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+        }
+    capitalSocialInput.addEventListener("blur", () => {
+        // Obtem o valor desformatado do campo formatado
+        const valorDesformatado = desformatarValorMonetario(capitalSocialInput.value);
 
-    // Atualiza o campo numérico oculto
-    capitalSocialNumInput.value = valorDesformatado.toFixed(2);
+        // Atualiza o campo numérico oculto
+        capitalSocialNumInput.value = valorDesformatado.toFixed(2);
 
-    // Log dentro do escopo correto
-    console.log("Valor formatado:", capitalSocialInput.value);
-    console.log("Valor desformatado:", valorDesformatado);
-});
-
-    
-    fileInputs.forEach(fileInput => {
-        const inputElement = document.getElementById(fileInput.id);
-        inputElement.addEventListener("change", validarFormulario);
+        // Log dentro do escopo correto
+        console.log("Valor formatado:", capitalSocialInput.value);
+        console.log("Valor desformatado:", valorDesformatado);
     });
 
-    const pessoaJuridica = JSON.parse(localStorage.getItem("pessoaJuridica"));
-if (!pessoaJuridica) {
-    console.error("Dados de pessoa jurídica não encontrados no localStorage.");
-} else {
-    console.log("Capital Social enviado:", pessoaJuridica.capital_social);
-}
+    
+        fileInputs.forEach(fileInput => {
+            const inputElement = document.getElementById(fileInput.id);
+            inputElement.addEventListener("change", validarFormulario);
+        });
+
+        const pessoaJuridica = JSON.parse(localStorage.getItem("pessoaJuridica"));
+    if (!pessoaJuridica) {
+        console.error("Dados de pessoa jurídica não encontrados no localStorage.");
+    } else {
+        console.log("Capital Social enviado:", pessoaJuridica.capital_social);
+    }
 
     validarFormulario();
 });

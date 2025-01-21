@@ -355,7 +355,7 @@ app.post('/bancos', async (req, res) => {
                     data_abertura = EXCLUDED.data_abertura;
             `;
             const values = [
-                id_empresa, banco.banco, banco.agencia, banco.conta, banco.gerente, banco.telefone, banco.data_abertura
+                id_empresa, banco.banco, banco.agencia, banco.conta, banco.gerente, banco.telefone, banco.dataAbertura
             ];
             await pool.query(query, values);
         }
@@ -465,7 +465,7 @@ app.post('/salvar-tudo', async (req, res) => {
                     observacoes = EXCLUDED.observacoes;
             `;
             const bankValues = [
-                pessoaJuridicaId, bankRef.banco, bankRef.agencia, bankRef.conta, bankRef.data_abertura,
+                pessoaJuridicaId, bankRef.banco, bankRef.agencia, bankRef.conta, bankRef.dataAbertura,
                 bankRef.telefone, bankRef.gerente, bankRef.observacoes
             ];
             await client.query(bankQuery, bankValues);

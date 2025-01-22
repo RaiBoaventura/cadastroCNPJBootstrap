@@ -161,7 +161,7 @@ app.put('/empresa/:id', async (req, res) => {
                 await client.query(query, values);
             }
         }
-        
+
 
         // Atualizar referências comerciais
         if (referencias_comerciais && referencias_comerciais.length > 0) {
@@ -181,7 +181,7 @@ app.put('/empresa/:id', async (req, res) => {
                 await client.query(query, values);
             }
         }
-        
+
 
         // Atualizar sócios
         if (socios && socios.length > 0) {
@@ -204,7 +204,7 @@ app.put('/empresa/:id', async (req, res) => {
                 await client.query(query, values);
             }
         }
-        
+
 
         await client.query('COMMIT');
         res.status(200).json({ message: 'Empresa atualizada com sucesso!' });
@@ -397,16 +397,16 @@ app.post('/salvar-tudo', async (req, res) => {
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
             RETURNING id;
         `;
-        
-        const pessoaJuridicaValues = [
-            pessoaJuridica.cnpj, pessoaJuridica.razao_social, pessoaJuridica.nome_fantasia,
-            pessoaJuridica.inscricao_estadual, pessoaJuridica.ramo_atividade, pessoaJuridica.data_fundacao,
-            pessoaJuridica.capital_social, pessoaJuridica.conta_bancaria, pessoaJuridica.email,
-            pessoaJuridica.site, pessoaJuridica.contador, pessoaJuridica.telefone,
-            pessoaJuridica.telefone_contador, pessoaJuridica.logradouro, pessoaJuridica.numero_complemento,
-            pessoaJuridica.bairro, pessoaJuridica.cidade, pessoaJuridica.uf
-        ];
-        
+
+            const pessoaJuridicaValues = [
+                pessoaJuridica.cnpj, pessoaJuridica.razao_social, pessoaJuridica.nome_fantasia,
+                pessoaJuridica.inscricao_estadual, pessoaJuridica.ramo_atividade, pessoaJuridica.data_fundacao,
+                pessoaJuridica.capital_social, pessoaJuridica.conta_bancaria, pessoaJuridica.email,
+                pessoaJuridica.site, pessoaJuridica.contador, pessoaJuridica.telefone,
+                pessoaJuridica.telefone_contador, pessoaJuridica.logradouro, pessoaJuridica.numero_complemento,
+                pessoaJuridica.bairro, pessoaJuridica.cidade, pessoaJuridica.uf
+            ];
+
             const pessoaJuridicaResult = await client.query(pessoaJuridicaQuery, pessoaJuridicaValues);
             pessoaJuridicaId = pessoaJuridicaResult.rows[0].id;
         }
@@ -483,7 +483,7 @@ app.post('/salvar-tudo', async (req, res) => {
         app.put('/empresa/:id', async (req, res) => {
             const { id } = req.params;
             const { cnpj, razao_social, telefone } = req.body;
-        
+
             try {
                 const query = `
                     UPDATE empresa
@@ -492,18 +492,18 @@ app.post('/salvar-tudo', async (req, res) => {
                 `;
                 const values = [cnpj, razao_social, telefone, id];
                 const result = await pool.query(query, values);
-        
+
                 if (result.rowCount === 0) {
                     return res.status(404).json({ message: 'Empresa não encontrada.' });
                 }
-        
+
                 res.json({ message: 'Empresa atualizada com sucesso!' });
             } catch (error) {
                 console.error('Erro ao atualizar empresa:', error);
                 res.status(500).json({ message: 'Erro ao atualizar empresa.', error: error.message });
             }
         });
-        
+
         // Confirma a transação
         await client.query('COMMIT');
         res.json({ message: 'Dados salvos com sucesso!' });

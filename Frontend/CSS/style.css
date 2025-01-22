@@ -1,15 +1,18 @@
 body {
-    background-color: #1c1c1c; /* Mantém o fundo escuro */
+    background-color: #1c1c1c;
+    /* Mantém o fundo escuro */
     color: #e0e0e0;
     font-family: 'Arial', sans-serif;
     line-height: 1.6;
 }
 
 .card {
-    margin-bottom: 20px; /* Espaço extra entre os cards */
+    margin-bottom: 20px;
+    /* Espaço extra entre os cards */
     padding: 20px;
     border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Sombra leve */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    /* Sombra leve */
 }
 
 .form-control {
@@ -17,6 +20,7 @@ body {
     padding: 10px 15px;
     transition: box-shadow 0.3s ease;
 }
+
 .is-invalid {
     border-color: #dc3545;
 }
@@ -30,27 +34,30 @@ body {
     color: #dc3545;
 }
 
-tr{
+tr {
     color: white;
 }
 
-th{
+th {
     color: white;
 }
+
 .form-control:focus {
     border-color: #ffd700;
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
 }
 
 .btn {
-    border-radius: 8px; /* Bordas arredondadas */
+    border-radius: 8px;
+    /* Bordas arredondadas */
     padding: 10px 20px;
     transition: transform 0.2s ease, background-color 0.3s ease;
 }
 
 .btn-primary:hover {
     background-color: #ffcc00;
-    transform: translateY(-3px); /* Efeito de elevação */
+    transform: translateY(-3px);
+    /* Efeito de elevação */
 }
 
 
@@ -69,7 +76,9 @@ th{
     margin-right: auto;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
     font-family: 'Arial Black', sans-serif;
     font-size: 2.5rem;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
@@ -77,7 +86,7 @@ h1, h2, h3 {
 
 
 /* Títulos */
- h5 {
+h5 {
     color: #ffd700;
     font-weight: 700;
 }
@@ -109,8 +118,10 @@ h1, h2, h3 {
 /* Estilo para Campos Somente Leitura */
 .form-control[readonly],
 .form-control[disabled] {
-    background-color: #2b2b2b; /* Fundo mais escuro para campos readonly */
-    color: #bbbbbb; /* Texto em cinza claro */
+    background-color: #2b2b2b;
+    /* Fundo mais escuro para campos readonly */
+    color: #bbbbbb;
+    /* Texto em cinza claro */
     border-color: #666;
 }
 
@@ -119,6 +130,7 @@ h1, h2, h3 {
     background: linear-gradient(90deg, #ffd700, #e6b800);
     box-shadow: 0px 4px 8px rgba(255, 215, 0, 0.4);
 }
+
 .btn-primary:hover {
     transform: scale(1.05);
     box-shadow: 0px 6px 12px rgba(255, 215, 0, 0.6);
@@ -160,12 +172,14 @@ h1, h2, h3 {
 }
 
 /* Links e Ícones */
-a, .link {
+a,
+.link {
     color: #ffd700;
     text-decoration: none;
 }
 
-a:hover, .link:hover {
+a:hover,
+.link:hover {
     color: #ffcc00;
     text-decoration: underline;
 }
@@ -184,10 +198,13 @@ input:-webkit-autofill:hover,
 textarea:-webkit-autofill,
 textarea:-webkit-autofill:focus,
 textarea:-webkit-autofill:hover {
-    -webkit-box-shadow: 0 0 0px 1000px #333 inset; /* Cor de fundo do campo */
+    -webkit-box-shadow: 0 0 0px 1000px #333 inset;
+    /* Cor de fundo do campo */
     box-shadow: 0 0 0px 1000px #333 inset;
-    -webkit-text-fill-color: #e0e0e0; /* Cor do texto para preenchimento automático */
-    color: #e0e0e0; /* Cor do texto para outros navegadores */
+    -webkit-text-fill-color: #e0e0e0;
+    /* Cor do texto para preenchimento automático */
+    color: #e0e0e0;
+    /* Cor do texto para outros navegadores */
 }
 
 
@@ -195,7 +212,8 @@ textarea:-webkit-autofill:hover {
 .form-control:focus {
     border-color: #ffd700;
     box-shadow: 0 0 6px rgba(255, 215, 0, 0.6);
-    background-color: #3a3a3a; /* Fundo mais claro para foco */
+    background-color: #3a3a3a;
+    /* Fundo mais claro para foco */
     color: #e0e0e0;
 }
 
@@ -203,10 +221,13 @@ textarea:-webkit-autofill:hover {
 .form-control[readonly],
 .form-control[disabled],
 input:-webkit-autofill {
-    background-color: #2b2b2b !important; /* Fundo mais escuro */
+    background-color: #2b2b2b !important;
+    /* Fundo mais escuro */
     color: #ffffff !important;
-    -webkit-text-fill-color: #bbbbbb !important; /* Cor do texto ao autopreencher */
+    -webkit-text-fill-color: #bbbbbb !important;
+    /* Cor do texto ao autopreencher */
 }
+
 /* Zona de Upload */
 .drop-zone {
     border: 2px dashed #ffd700;
@@ -278,6 +299,7 @@ input:-webkit-autofill {
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -289,13 +311,19 @@ input:-webkit-autofill {
 .is-invalid {
     animation: shake 0.3s ease-in-out;
 }
+
 @keyframes shake {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateX(0);
     }
-    25%, 75% {
+
+    25%,
+    75% {
         transform: translateX(-5px);
     }
+
     50% {
         transform: translateX(5px);
     }
@@ -320,7 +348,8 @@ header p {
 }
 
 .card {
-    margin-bottom: 25px; /* Mais espaço entre os cards */
+    margin-bottom: 25px;
+    /* Mais espaço entre os cards */
 }
 
 h2 {
@@ -328,4 +357,3 @@ h2 {
     color: #ffd700;
     font-weight: 700;
 }
-

@@ -22,92 +22,92 @@ document.addEventListener("DOMContentLoaded", () => {
     let isTyping = false; // Para evitar formatações simultâneas
 
     // === Validação de Data de Fundação ===
-function validarDataFundacao(data) {
-    const hoje = new Date();
-    const dataFormatada = new Date(data);
-    return dataFormatada <= hoje && !isNaN(dataFormatada);
-}
-
-dataFundacaoInput.addEventListener("blur", () => {
-    const data = dataFundacaoInput.value.trim();
-    if (data === "") {
-        dataFundacaoError.textContent = "O campo de data de fundação é obrigatório.";
-        dataFundacaoError.style.display = "block";
-        dataFundacaoInput.classList.add("is-invalid");
-    } else if (!validarDataFundacao(data)) {
-        dataFundacaoError.textContent = "A data de fundação não pode ser futura ou inválida.";
-        dataFundacaoError.style.display = "block";
-        dataFundacaoInput.classList.add("is-invalid");
-    } else {
-        dataFundacaoError.style.display = "none";
-        dataFundacaoInput.classList.remove("is-invalid");
-        dataFundacaoInput.classList.add("is-valid");
+    function validarDataFundacao(data) {
+        const hoje = new Date();
+        const dataFormatada = new Date(data);
+        return dataFormatada <= hoje && !isNaN(dataFormatada);
     }
-    validarFormulario();
-});
 
-// === Formatar Telefone em Tempo Real ===
-function formatarTelefone(input) {
-    input.addEventListener("input", () => {
-        let telefone = input.value.replace(/\D/g, ""); // Remove caracteres não numéricos
-
-        if (telefone.length > 11) telefone = telefone.slice(0, 11); // Limita a 11 dígitos
-
-        if (telefone.length <= 10) {
-            telefone = telefone.replace(/^(\d{2})(\d{4})(\d{0,4})$/, "($1) $2-$3"); // Formato para telefone fixo
+    dataFundacaoInput.addEventListener("blur", () => {
+        const data = dataFundacaoInput.value.trim();
+        if (data === "") {
+            dataFundacaoError.textContent = "O campo de data de fundação é obrigatório.";
+            dataFundacaoError.style.display = "block";
+            dataFundacaoInput.classList.add("is-invalid");
+        } else if (!validarDataFundacao(data)) {
+            dataFundacaoError.textContent = "A data de fundação não pode ser futura ou inválida.";
+            dataFundacaoError.style.display = "block";
+            dataFundacaoInput.classList.add("is-invalid");
         } else {
-            telefone = telefone.replace(/^(\d{2})(\d{5})(\d{0,4})$/, "($1) $2-$3"); // Formato para celular
+            dataFundacaoError.style.display = "none";
+            dataFundacaoInput.classList.remove("is-invalid");
+            dataFundacaoInput.classList.add("is-valid");
         }
-
-        input.value = telefone;
+        validarFormulario();
     });
-}
 
-// Aplica a formatação em tempo real nos campos de telefone
-formatarTelefone(telefoneInput);
-formatarTelefone(telefoneContadorInput);
+    // === Formatar Telefone em Tempo Real ===
+    function formatarTelefone(input) {
+        input.addEventListener("input", () => {
+            let telefone = input.value.replace(/\D/g, ""); // Remove caracteres não numéricos
 
-// === Validação de Telefone ===
-function validarTelefone(telefone) {
-    const telefoneRegex = /^\(?\d{2}\)?[\s-]?\d{4,5}[\s-]?\d{4}$/; // Aceita formatos como (XX) XXXXX-XXXX ou XX XXXX-XXXX
-    return telefoneRegex.test(telefone);
-}
+            if (telefone.length > 11) telefone = telefone.slice(0, 11); // Limita a 11 dígitos
 
-telefoneInput.addEventListener("blur", () => {
-    const telefone = telefoneInput.value.trim();
-    if (telefone === "") {
-        telefoneError.textContent = "O campo de telefone é obrigatório.";
-        telefoneError.style.display = "block";
-        telefoneInput.classList.add("is-invalid");
-    } else if (!validarTelefone(telefone)) {
-        telefoneError.textContent = "O telefone deve estar no formato válido (XX XXXXX-XXXX ou XX XXXX-XXXX).";
-        telefoneError.style.display = "block";
-        telefoneInput.classList.add("is-invalid");
-    } else {
-        telefoneError.style.display = "none";
-        telefoneInput.classList.remove("is-invalid");
-        telefoneInput.classList.add("is-valid");
+            if (telefone.length <= 10) {
+                telefone = telefone.replace(/^(\d{2})(\d{4})(\d{0,4})$/, "($1) $2-$3"); // Formato para telefone fixo
+            } else {
+                telefone = telefone.replace(/^(\d{2})(\d{5})(\d{0,4})$/, "($1) $2-$3"); // Formato para celular
+            }
+
+            input.value = telefone;
+        });
     }
-    validarFormulario();
-});
 
-telefoneContadorInput.addEventListener("blur", () => {
-    const telefone = telefoneContadorInput.value.trim();
-    if (telefone === "") {
-        telefoneContadorError.textContent = "O campo de telefone do contador é obrigatório.";
-        telefoneContadorError.style.display = "block";
-        telefoneContadorInput.classList.add("is-invalid");
-    } else if (!validarTelefone(telefone)) {
-        telefoneContadorError.textContent = "O telefone do contador deve estar no formato válido (XX XXXXX-XXXX ou XX XXXX-XXXX).";
-        telefoneContadorError.style.display = "block";
-        telefoneContadorInput.classList.add("is-invalid");
-    } else {
-        telefoneContadorError.style.display = "none";
-        telefoneContadorInput.classList.remove("is-invalid");
-        telefoneContadorInput.classList.add("is-valid");
+    // Aplica a formatação em tempo real nos campos de telefone
+    formatarTelefone(telefoneInput);
+    formatarTelefone(telefoneContadorInput);
+
+    // === Validação de Telefone ===
+    function validarTelefone(telefone) {
+        const telefoneRegex = /^\(?\d{2}\)?[\s-]?\d{4,5}[\s-]?\d{4}$/; // Aceita formatos como (XX) XXXXX-XXXX ou XX XXXX-XXXX
+        return telefoneRegex.test(telefone);
     }
-    validarFormulario();
-});
+
+    telefoneInput.addEventListener("blur", () => {
+        const telefone = telefoneInput.value.trim();
+        if (telefone === "") {
+            telefoneError.textContent = "O campo de telefone é obrigatório.";
+            telefoneError.style.display = "block";
+            telefoneInput.classList.add("is-invalid");
+        } else if (!validarTelefone(telefone)) {
+            telefoneError.textContent = "O telefone deve estar no formato válido (XX XXXXX-XXXX ou XX XXXX-XXXX).";
+            telefoneError.style.display = "block";
+            telefoneInput.classList.add("is-invalid");
+        } else {
+            telefoneError.style.display = "none";
+            telefoneInput.classList.remove("is-invalid");
+            telefoneInput.classList.add("is-valid");
+        }
+        validarFormulario();
+    });
+
+    telefoneContadorInput.addEventListener("blur", () => {
+        const telefone = telefoneContadorInput.value.trim();
+        if (telefone === "") {
+            telefoneContadorError.textContent = "O campo de telefone do contador é obrigatório.";
+            telefoneContadorError.style.display = "block";
+            telefoneContadorInput.classList.add("is-invalid");
+        } else if (!validarTelefone(telefone)) {
+            telefoneContadorError.textContent = "O telefone do contador deve estar no formato válido (XX XXXXX-XXXX ou XX XXXX-XXXX).";
+            telefoneContadorError.style.display = "block";
+            telefoneContadorInput.classList.add("is-invalid");
+        } else {
+            telefoneContadorError.style.display = "none";
+            telefoneContadorInput.classList.remove("is-invalid");
+            telefoneContadorInput.classList.add("is-valid");
+        }
+        validarFormulario();
+    });
 
 
     // === Validação de E-mail ===
@@ -115,7 +115,7 @@ telefoneContadorInput.addEventListener("blur", () => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     }
-    
+
     emailInput.addEventListener("blur", () => {
         const email = emailInput.value.trim();
         if (email === "") {
@@ -194,10 +194,10 @@ telefoneContadorInput.addEventListener("blur", () => {
         document.getElementById("data_fundacao").value = data.data_inicio_atividade || '';
 
         const numericValue = parseFloat(data.capital_social || '0');
-    
+
         // Preenche o campo numérico oculto
         capitalSocialNumInput.value = numericValue.toFixed(2);
-        
+
         // Formata o valor como moeda e preenche o campo visível
         capitalSocialInput.value = numericValue.toLocaleString("pt-BR", {
             style: "currency",
@@ -276,25 +276,25 @@ telefoneContadorInput.addEventListener("blur", () => {
     capitalSocialInput.addEventListener("input", () => {
         if (isTyping) return;
         isTyping = true;
-    
+
         // Remove todos os caracteres não numéricos
         const rawValue = capitalSocialInput.value.replace(/[^\d]/g, '');
-    
+
         const numericValue = rawValue ? parseFloat(rawValue) / 100 : 0;
-    
+
         // Formata o valor como moeda brasileira
         capitalSocialInput.value = numericValue.toLocaleString('pt-BR', {
             style: 'currency',
             currency: 'BRL',
         });
-    
+
         // Atualiza o campo numérico oculto
         capitalSocialNumInput.value = numericValue.toFixed(2);
-    
+
         isTyping = false;
     });
-    
-        
+
+
     cnpjInput.addEventListener("blur", () => {
         const cnpj = cnpjInput.value;
         if (validarCNPJ(cnpj)) {
@@ -328,7 +328,7 @@ telefoneContadorInput.addEventListener("blur", () => {
             cidade: document.getElementById("cidade").value,
             uf: document.getElementById("uf").value,
         };
-    
+
         try {
             localStorage.setItem("pessoaJuridica", JSON.stringify(pessoaJuridica));
             localStorage.setItem("empresaCNPJ", pessoaJuridica.cnpj); // Salva apenas o CNPJ
@@ -342,24 +342,24 @@ telefoneContadorInput.addEventListener("blur", () => {
     capitalSocialInput.addEventListener("input", () => {
         // Remove caracteres não numéricos, incluindo pontos e vírgulas
         let rawValue = capitalSocialInput.value.replace(/[^\d]/g, "");
-    
+
         // Converte para número e ajusta se estiver vazio
         let numericValue = rawValue ? parseFloat(rawValue) / 100 : 0;
-    
+
         // Formata como moeda brasileira
         capitalSocialInput.value = numericValue.toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL",
         });
-    
+
         // Atualiza o campo numérico oculto
         capitalSocialNumInput.value = numericValue.toFixed(2);
     });
-    
-        function desformatarValorMonetario(valor) {
-            // Remove o símbolo de moeda, pontos e espaços
-            return parseFloat(valor.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-        }
+
+    function desformatarValorMonetario(valor) {
+        // Remove o símbolo de moeda, pontos e espaços
+        return parseFloat(valor.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+    }
     capitalSocialInput.addEventListener("blur", () => {
         // Obtem o valor desformatado do campo formatado
         const valorDesformatado = desformatarValorMonetario(capitalSocialInput.value);
@@ -372,13 +372,13 @@ telefoneContadorInput.addEventListener("blur", () => {
         console.log("Valor desformatado:", valorDesformatado);
     });
 
-    
-        fileInputs.forEach(fileInput => {
-            const inputElement = document.getElementById(fileInput.id);
-            inputElement.addEventListener("change", validarFormulario);
-        });
 
-        const pessoaJuridica = JSON.parse(localStorage.getItem("pessoaJuridica"));
+    fileInputs.forEach(fileInput => {
+        const inputElement = document.getElementById(fileInput.id);
+        inputElement.addEventListener("change", validarFormulario);
+    });
+
+    const pessoaJuridica = JSON.parse(localStorage.getItem("pessoaJuridica"));
     if (!pessoaJuridica) {
         console.error("Dados de pessoa jurídica não encontrados no localStorage.");
     } else {

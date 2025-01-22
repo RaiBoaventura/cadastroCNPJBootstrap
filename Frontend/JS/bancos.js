@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function validarEPrepararPayload(commercialRefs, bankRefs, pessoaJuridica, socios) {
 
-        const referenciasComerciaisValidas = commercialRefs.every(ref => 
+        const referenciasComerciaisValidas = commercialRefs.every(ref =>
             ref.fornecedor && ref.telefone && ref.ramo_atividade && ref.contato
         );
         if (!referenciasComerciaisValidas) {
@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return null;
         }
 
-        const referenciasBancariasValidas = bankRefs.every(ref => 
+        const referenciasBancariasValidas = bankRefs.every(ref =>
             ref.banco && ref.agencia && ref.conta && ref.dataAbertura && ref.telefone && ref.gerente
         );
         if (!referenciasBancariasValidas) {
@@ -137,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return null;
         }
 
-        const sociosValidos = socios.every(socio => 
+        const sociosValidos = socios.every(socio =>
             socio.nome && socio.telefone && socio.email
         );
         if (!sociosValidos) {

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
   <link rel="stylesheet" href="CSS/style.css">
   <script type="module" src="JS/index.js" defer></script>
 </head>
+
 <body>
   <div class="container my-5">
     <header class="text-center mb-4">
@@ -48,7 +50,8 @@
           </div>
           <div class="col-md-6 mb-3">
             <label for="capitalSocial" class="form-label">Capital Social (R$):</label>
-            <input type="text" class="form-control" id="capital_social" placeholder="Digite o valor em reais (R$)" required>
+            <input type="text" class="form-control" id="capital_social" placeholder="Digite o valor em reais (R$)"
+              required>
             <input type="hidden" id="capital_social_num" name="capital_social_num">
           </div>
         </div>
@@ -110,47 +113,47 @@
           </div>
           <div class="col-md-4 mb-3">
             <label for="uf" class="form-label">UF:</label>
-            <input type="text" class="form-control" id="uf" value="PR" >
+            <input type="text" class="form-control" id="uf" value="PR">
           </div>
         </div>
       </div>
 
       <div id="upload-section" class="card p-4 mb-4">
-  <h2 class="text-primary">Anexar Documentos</h2>
-  <p class="text-secondary mb-3">Arraste os arquivos ou clique nos campos abaixo para anexar.</p>
-  
-  <!-- Contrato Social -->
-  <div class="mb-4">
-    <h4 class="text-secondary"><i class="fas fa-file-contract"></i> Contrato Social e Última Alteração</h4>
-    <div id="contrato-drop-zone" class="drop-zone">
-      <input type="file" id="contrato_Social" multiple style="display: none;">
-      <p class="text-muted">Clique ou arraste aqui</p>
-    </div>
-    <ul id="contrato-list" class="file-list"></ul>
-  </div>
+        <h2 class="text-primary">Anexar Documentos</h2>
+        <p class="text-secondary mb-3">Arraste os arquivos ou clique nos campos abaixo para anexar.</p>
 
-  <!-- Cartão CNPJ -->
-  <div class="mb-4">
-    <h4 class="text-secondary"><i class="fas fa-id-card"></i> Cartão CNPJ Atualizado</h4>
-    <div id="cnpj-drop-zone" class="drop-zone">
-      <input type="file" id="cartao_CNPJ" multiple style="display: none;">
-      <p class="text-muted">Clique ou arraste aqui</p>
-    </div>
-    <ul id="cnpj-list" class="file-list"></ul>
-  </div>
+        <!-- Contrato Social -->
+        <div class="mb-4">
+          <h4 class="text-secondary"><i class="fas fa-file-contract"></i> Contrato Social e Última Alteração</h4>
+          <div id="contrato-drop-zone" class="drop-zone">
+            <input type="file" id="contrato_Social" multiple style="display: none;">
+            <p class="text-muted">Clique ou arraste aqui</p>
+          </div>
+          <ul id="contrato-list" class="file-list"></ul>
+        </div>
 
-  <!-- Relação de Faturamento -->
-  <div class="mb-4">
-    <h4 class="text-secondary"><i class="fas fa-chart-line"></i> Relação de Faturamento</h4>
-    <div id="faturamento-drop-zone" class="drop-zone">
-      <input type="file" id="relacao_Faturamento" multiple style="display: none;">
-      <p class="text-muted">Clique ou arraste aqui</p>
-    </div>
-    <ul id="faturamento-list" class="file-list"></ul>
-  </div>
-</div>
-      
-      
+        <!-- Cartão CNPJ -->
+        <div class="mb-4">
+          <h4 class="text-secondary"><i class="fas fa-id-card"></i> Cartão CNPJ Atualizado</h4>
+          <div id="cnpj-drop-zone" class="drop-zone">
+            <input type="file" id="cartao_CNPJ" multiple style="display: none;">
+            <p class="text-muted">Clique ou arraste aqui</p>
+          </div>
+          <ul id="cnpj-list" class="file-list"></ul>
+        </div>
+
+        <!-- Relação de Faturamento -->
+        <div class="mb-4">
+          <h4 class="text-secondary"><i class="fas fa-chart-line"></i> Relação de Faturamento</h4>
+          <div id="faturamento-drop-zone" class="drop-zone">
+            <input type="file" id="relacao_Faturamento" multiple style="display: none;">
+            <p class="text-muted">Clique ou arraste aqui</p>
+          </div>
+          <ul id="faturamento-list" class="file-list"></ul>
+        </div>
+      </div>
+
+
       <!-- Botões -->
       <div class="d-flex justify-content-end">
         <button type="button" id="continuar-btn" class="btn btn-primary">Salvar e Continuar</button>
@@ -158,4 +161,5 @@
     </form>
   </div>
 </body>
+
 </html>

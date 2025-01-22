@@ -28,20 +28,20 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    
+
     function adicionarEventoCEP(index) {
         const cepInput = document.getElementById(`cep-socio-${index}`);
         const enderecoInput = document.getElementById(`endereco-socio-${index}`);
         const bairroInput = document.getElementById(`bairro-socio-${index}`);
         const cidadeInput = document.getElementById(`cidade-socio-${index}`);
         const ufInput = document.getElementById(`uf-socio-${index}`);
-    
+
         let errorMessage = document.createElement("span");
         errorMessage.className = "error-message text-danger";
         errorMessage.style.display = "none";
         errorMessage.id = `cep-error-${index}`;
         cepInput.parentNode.appendChild(errorMessage);
-    
+
         if (cepInput) {
             cepInput.addEventListener("blur", async () => {
                 const cep = cepInput.value.replace(/\D/g, ''); // Remover caracteres não numéricos
@@ -52,12 +52,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     limparEndereco(index); // Limpa os campos relacionados
                     return;
                 }
-    
+
                 try {
                     const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
                     if (!response.ok) throw new Error("Erro ao buscar endereço");
                     const data = await response.json();
-    
+
                     if (data.erro) {
                         errorMessage.textContent = "CEP não encontrado. Verifique e tente novamente.";
                         errorMessage.style.display = "block";
@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         limparEndereco(index);
                         return;
                     }
-    
+
                     // Preencher os campos de endereço automaticamente
                     enderecoInput.value = data.logradouro || '';
                     bairroInput.value = data.bairro || '';
@@ -84,25 +84,25 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
     }
-    
+
     function limparEndereco(index) {
         document.getElementById(`endereco-socio-${index}`).value = '';
         document.getElementById(`bairro-socio-${index}`).value = '';
         document.getElementById(`cidade-socio-${index}`).value = '';
         document.getElementById(`uf-socio-${index}`).value = '';
     }
-    
-// Verificar se há pelo menos um sócio
-function verificarSocios() {
-    const totalSocios = document.querySelectorAll(".card").length;
 
-    if (totalSocios === 0) {
-        alert("É necessário adicionar pelo menos um sócio antes de avançar.");
-        return false; // Impede o avanço
+    // Verificar se há pelo menos um sócio
+    function verificarSocios() {
+        const totalSocios = document.querySelectorAll(".card").length;
+
+        if (totalSocios === 0) {
+            alert("É necessário adicionar pelo menos um sócio antes de avançar.");
+            return false; // Impede o avanço
+        }
+
+        return true; // Permite o avanço
     }
-
-    return true; // Permite o avanço
-}
 
 
 
@@ -166,18 +166,18 @@ function verificarSocios() {
             <button type="button" class="btn btn-danger remove-socio-btn" data-index="${index}">Remover Sócio</button>
         `;
         socioContainer.appendChild(socioDiv);
-    
+
         // Chamar a função para associar o evento ao botão de remoção
         adicionarEventoRemoverSocio(index);
-    
+
         // Chamar a função para associar o evento ao campo de CEP
         adicionarEventoCEP(index);
     }
-    
-    
+
+
     function validarSocios() {
         let valid = true;
-    
+
         // Iterar sobre cada sócio no DOM
         document.querySelectorAll(".card").forEach((card, index) => {
             const camposObrigatorios = [
@@ -191,10 +191,10 @@ function verificarSocios() {
                 `telefone-socio-${index}`,
                 `email-socio-${index}`
             ];
-    
+
             camposObrigatorios.forEach(campoId => {
                 const campo = document.getElementById(campoId);
-    
+
                 if (!campo.value.trim()) {
                     campo.classList.add("is-invalid"); // Destacar como inválido
                     valid = false; // Marcar como inválido
@@ -204,15 +204,15 @@ function verificarSocios() {
                 }
             });
         });
-    
+
         if (!valid) {
             alert("Por favor, preencha todos os campos de todos os sócios antes de avançar.");
         }
-    
+
         return valid;
     }
-    
-    
+
+
     // Adicionar evento para remover sócio
     function adicionarEventoRemoverSocio(index) {
         const removeBtn = document.querySelector(`#socio-${index} .remove-socio-btn`);
@@ -234,19 +234,19 @@ function verificarSocios() {
         criarCamposSocio(novoSocio, socioIndex++);
     });
 
-// Integrar a verificação ao evento de avançar
-avancarBtn.addEventListener("click", (event) => {
-    const sociosValidos = verificarSocios() && validarSocios(); // Verifica todos os critérios
+    // Integrar a verificação ao evento de avançar
+    avancarBtn.addEventListener("click", (event) => {
+        const sociosValidos = verificarSocios() && validarSocios(); // Verifica todos os critérios
 
-    if (!sociosValidos) {
-        event.preventDefault(); // Impede o comportamento padrão do botão
-        return;
-    }
+        if (!sociosValidos) {
+            event.preventDefault(); // Impede o comportamento padrão do botão
+            return;
+        }
 
-    sincronizarDados();
-    localStorage.setItem("sociosData", JSON.stringify(sociosData));
-    window.location.href = "bancos.html";
-});
+        sincronizarDados();
+        localStorage.setItem("sociosData", JSON.stringify(sociosData));
+        window.location.href = "bancos.html";
+    });
 
     // Carregar sócios com base no CNPJ
     async function carregarSocios() {
@@ -279,6 +279,6 @@ avancarBtn.addEventListener("click", (event) => {
         }
     }
 
-    
+
     carregarSocios();
 });

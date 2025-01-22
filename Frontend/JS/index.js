@@ -232,7 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         dropZone.addEventListener("drop", e => handleFiles(e.dataTransfer.files, list));
         dropZone.addEventListener("click", () => input.click());
-        input.addEventListener("change", () => handleFiles(input.files, list));
+        input.addEventListener("change",() => handleFiles(input.files, list));
     }
 
     function handleFiles(files, list) {

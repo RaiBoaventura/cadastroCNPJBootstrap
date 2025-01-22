@@ -225,7 +225,58 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
     }
+// Função para validar o formato do e-mail
+function validarEmail(email) {
+    const regex = /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/;
+    return regex.test(email);
+}
 
+function validarSocios() {
+    let valid = true;
+
+    // Iterar sobre cada sócio no DOM
+    document.querySelectorAll(".card").forEach((card, index) => {
+        const camposObrigatorios = [
+            `nome-socio-${index}`,
+            `cep-socio-${index}`,
+            `endereco-socio-${index}`,
+            `numero-socio-${index}`,
+            `bairro-socio-${index}`,
+            `cidade-socio-${index}`,
+            `uf-socio-${index}`,
+            `telefone-socio-${index}`,
+            `email-socio-${index}`
+        ];
+
+        camposObrigatorios.forEach(campoId => {
+            const campo = document.getElementById(campoId);
+
+            if (!campo.value.trim()) {
+                campo.classList.add("is-invalid"); // Destacar como inválido
+                valid = false; // Marcar como inválido
+            } else {
+                campo.classList.remove("is-invalid"); // Remover erro se válido
+                campo.classList.add("is-valid"); // Adicionar classe de válido
+            }
+        });
+
+        // Validar o e-mail separadamente
+        const emailInput = document.getElementById(`email-socio-${index}`);
+        if (!validarEmail(emailInput.value.trim())) {
+            emailInput.classList.add("is-invalid"); // Destacar como inválido
+            valid = false; // Marcar como inválido
+        } else {
+            emailInput.classList.remove("is-invalid"); // Remover erro se válido
+            emailInput.classList.add("is-valid"); // Adicionar classe de válido
+        }
+    });
+
+    if (!valid) {
+        alert("Por favor, preencha todos os campos corretamente antes de avançar, incluindo e-mails válidos.");
+    }
+
+    return valid;
+}
     // Adicionar um novo sócio
     addSocioBtn.addEventListener("click", () => {
         sincronizarDados();
